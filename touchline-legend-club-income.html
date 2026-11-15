@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Touchline Legend</title>
+<style>
+*{box-sizing:border-box}
+html,body{
+ margin:0;
+ width:100%;
+ height:100%;
+ background:#06152a;
+ font-family:Arial,sans-serif;
+}
+.screen{
+ width:100%;
+ min-height:100dvh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:0;
+}
+.art{
+ position:relative;
+ width:min(100vw,177.78dvh);
+ aspect-ratio:16/9;
+ background:url('assets/welcome.png') center/100% 100% no-repeat;
+}
+.welcome-hit{
+ position:absolute;
+ left:33%;
+ top:70%;
+ width:34%;
+ height:18%;
+ border:0;
+ padding:0;
+ background:transparent;
+ cursor:pointer;
+}
+#menu{
+ display:none;
+ background:#06152a;
+}
+.office-art{
+ position:relative;
+ width:min(100vw,177.78dvh);
+ aspect-ratio:16/9;
+ background:url('assets/manager-office.png') center/100% 100% no-repeat;
+}
+.office-hit{
+ position:absolute;
+ left:30%;
+ width:40%;
+ height:10%;
+ border:0;
+ padding:0;
+ background:transparent;
+ cursor:pointer;
+ appearance:none;
+}
+.office-hit:focus-visible,.welcome-hit:focus-visible{
+ outline:3px solid white;
+ border-radius:20px;
+}
+.new-career{top:38.5%}
+.continue-career{top:49.2%}
+.how-to-play{top:60%}
+.settings{top:70.7%}
+.back{top:81.5%}
+</style>
+
+<style>
+#career,#clubs{
+ display:none;
+ background:#06152a;
+}
+.game-art{
+ position:relative;
+ width:min(100vw,177.78dvh);
+ aspect-ratio:16/9;
+ background-size:100% 100%;
+ background-repeat:no-repeat;
+}
+.career-art{
+ background-image:url('assets/new-career.png');
+}
+.club-art{
+ background-image:url('assets/clubs.png');
+}
+.hit{
+ position:absolute;
+ border:0;
+ padding:0;
+ margin:0;
+ background:transparent;
+ cursor:pointer;
+ appearance:none;
+}
+.hit:focus-visible{
+ outline:3px solid white;
+ border-radius:12px;
+}
+.name-input{
+ position:absolute;
+ left:49%;
+ top:42%;
+ width:25%;
+ height:6%;
+ border:0;
+ background:white;
+ color:#162d50;
+ font:bold clamp(12px,2vw,25px) Arial;
+ text-align:center;
+ border-radius:20px;
+}
+.career-choose{left:14%;top:53%;width:73%;height:12%}
+.career-start{left:36%;top:68%;width:49%;height:11%}
+.career-back{left:21%;top:81%;width:24%;height:12%}
+.club-choice{
+ position:absolute;
+ width:26.5%;
+ height:8.5%;
+ border:0;
+ background:transparent;
+ cursor:pointer;
+ border-radius:12px;
+}
+.club-choice.selected{
+ outline:4px solid #ffe94b;
+ outline-offset:-3px;
+ background:rgba(255,230,0,.15);
+}
+.club-back{left:6%;top:80%;width:34%;height:11%}
+.club-confirm{left:42%;top:80%;width:53%;height:11%}
+</style>
+
+<style>
+#dashboard{
+ display:none;
+ background:#06152a;
+}
+.dashboard-art{
+ position:relative;
+ width:min(100vw,177.78dvh);
+ aspect-ratio:16/9;
+ background:url('assets/manager-dashboard.png')
+   center/100% 100% no-repeat;
+}
+.dashboard-hit{
+ position:absolute;
+ width:18.5%;
+ height:21%;
+ border:0;
+ padding:0;
+ margin:0;
+ background:transparent;
+ cursor:pointer;
+ appearance:none;
+ border-radius:15px;
+}
+.dashboard-hit:focus-visible{
+ outline:3px solid white;
+}
+</style>
+
+<style>
+.dashboard-live{
+ position:absolute;
+ left:16%;
+ top:28%;
+ width:68%;
+ min-height:5%;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:22px;
+ color:#fff;
+ font:bold clamp(12px,1.5vw,22px) Arial;
+ text-shadow:2px 2px 3px #06152a;
+ white-space:nowrap;
+ pointer-events:none;
+}
+</style>
+
+<style>
+#squadScreen{display:none;background:#06152a}
+.squad-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;overflow:hidden;background:linear-gradient(115deg,#10284c99,#081a38aa),url('assets/manager-dashboard.png') center/100% 100% no-repeat;container-type:inline-size;color:white}
+.sq-title{position:absolute;left:24%;top:3%;width:52%;height:13%;border:3px solid #ffc83d;border-radius:40px;background:linear-gradient(#1754b5,#071d50);box-shadow:0 4px 0 #03102a,0 0 15px #ffc83d77;display:flex;align-items:center;justify-content:center;font-size:3.5cqw;font-weight:900;text-shadow:2px 3px #06152a}
+.sq-panel{position:absolute;top:19%;height:64%;background:linear-gradient(#123e86,#071c46);border:3px solid #f6c33b;border-radius:15px;box-shadow:0 4px 0 #07142c;padding:0.65%;overflow:hidden}
+.sq-pitch-panel{left:2%;width:29%}.sq-xi-panel{left:32%;width:34%}.sq-side-panel{left:67%;width:31%}
+.sq-head{font-weight:900;text-align:center;color:#ffdb6b;font-size:1.55cqw;margin-bottom:1.5%;text-shadow:1px 2px #000}
+.sq-form{display:flex;align-items:center;justify-content:center;gap:5%;height:12%;font-size:1.35cqw;font-weight:bold}
+.sq-form button,.sq-footer button{color:white;background:linear-gradient(#2469c9,#0a2b78);border:2px solid #ffc83d;border-radius:15px;font-weight:900;cursor:pointer;text-shadow:1px 1px #001533}
+.sq-form button{height:95%;width:18%;font-size:1.5cqw}
+.sq-pitch{position:relative;margin:2% auto;width:94%;height:79%;border:2px solid #c9f1c7;border-radius:6px;background:repeating-linear-gradient(0deg,#1b8241 0%,#1b8241 12.5%,#207b3c 12.5%,#207b3c 25%);overflow:hidden}
+.sq-pitch:before{content:'';position:absolute;left:0;right:0;top:50%;border-top:2px solid #bce3b9}.sq-pitch:after{content:'';position:absolute;left:35%;top:41%;width:30%;height:18%;border:2px solid #bce3b9;border-radius:50%}
+.sq-marker{position:absolute;transform:translate(-50%,-50%);z-index:2;min-width:17%;max-width:25%;padding:2% 1%;border:2px solid #fbd053;border-radius:9px;background:#1555a8;color:#fff;font-size:1cqw;font-weight:bold;text-align:center;cursor:pointer;line-height:1.15}.sq-marker.goalkeeper{background:#c48c0b}.sq-marker.active{background:#f3d05b;color:#06152a}
+#squadXI{height:86%}#squadSubs,#squadReserves{height:76%}
+.sq-cols,.sq-row{display:grid;grid-template-columns:7% 49% 13% 13% 18%;align-items:center;gap:0;text-align:center}.sq-cols{height:6%;font-size:0.94cqw;color:#ffe18a;font-weight:bold}.sq-row{width:100%;height:9.09%;border:0;border-bottom:1px solid #8cadd144;color:white;background:#22569c;font-size:1.04cqw;font-weight:bold;cursor:pointer;padding:0}.sq-row:nth-child(even){background:#163d78}.sq-row.active{background:#d7aa2e;color:#08172d}.sq-row span:nth-child(2){text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding-left:2%}
+.sq-side-section{height:50%;overflow:hidden}.sq-side-section .sq-row{height:14.28%;font-size:0.91cqw}.sq-side-section .sq-cols{height:10%}.sq-side-section .sq-head{margin:0;height:12%}
+.sq-footer{position:absolute;left:2%;right:2%;bottom:2%;height:12%;display:flex;gap:1.5%;align-items:center}.sq-footer button{flex:1;height:80%;font-size:1.45cqw}.sq-footer button:last-child{background:linear-gradient(#21aa3b,#08611c)}
+.sq-message{position:absolute;left:20%;right:20%;top:16%;text-align:center;font-size:1.1cqw;font-weight:bold;color:#ffe58b;pointer-events:none}
+</style>
+
+<style>
+#tacticsScreen{display:none;background:#06152a}
+.tac-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;overflow:hidden;container-type:inline-size;color:white;background:linear-gradient(110deg,#091a3b99,#07132ba8),url('assets/manager-dashboard.png') center/100% 100% no-repeat;font-family:Arial,sans-serif}
+.tac-title{position:absolute;left:28%;top:2%;width:44%;height:12%;display:grid;place-items:center;border:3px solid #ffc83d;border-radius:50px;background:linear-gradient(#1765c6,#071c50);font-size:4cqw;font-weight:900;text-shadow:2px 3px #000;box-shadow:0 4px 0 #03102a}
+.tac-panel{position:absolute;top:17%;height:67%;background:linear-gradient(#12458e,#061c49);border:3px solid #ffcf42;border-radius:20px;box-shadow:0 5px 0 #03102a;padding:1%;overflow:hidden}
+.tac-left{left:2%;width:27%}.tac-middle{left:30%;width:40%;padding:.7%}.tac-right{left:71%;width:27%}
+.tac-heading{color:#ffe073;text-align:center;font-size:1.65cqw;font-weight:900;text-shadow:1px 2px #000;margin:0 0 3%}
+.tac-choice{display:block;width:94%;margin:2.5% auto;padding:2% 1%;border:2px solid #ffd44d;border-radius:13px;background:linear-gradient(#206acb,#092969);color:white;font-size:1.55cqw;font-weight:900;text-shadow:1px 2px #00112a;cursor:pointer}
+.tac-choice.selected{background:linear-gradient(#ffd952,#bc7900);color:#fff;border-color:#fff2a4;box-shadow:0 0 8px #ffdc59}
+.tac-sep{height:3%;margin-top:5%;border-top:1px solid #d8b35488}
+.tac-pitch{position:relative;width:100%;height:96%;border:3px solid #dbefca;border-radius:8px;overflow:hidden;background:repeating-linear-gradient(0deg,#13853b 0%,#13853b 12.5%,#0d7434 12.5%,#0d7434 25%)}
+.tac-pitch:before{content:'';position:absolute;left:0;right:0;top:50%;border-top:2px solid #bfe5bb}.tac-pitch:after{content:'';position:absolute;left:35%;top:40%;width:30%;height:20%;border:2px solid #bfe5bb;border-radius:50%}
+.tac-player{position:absolute;transform:translate(-50%,-50%);min-width:16%;max-width:27%;padding:1.2% 1%;border:2px solid #ffdb52;border-radius:12px;background:linear-gradient(#1d68c5,#082c75);text-align:center;color:white;font-size:1.12cqw;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:1px 1px #001b43;z-index:2}.tac-player.gk{background:linear-gradient(#e3b52b,#a66a04)}
+.tac-instruction{display:flex;align-items:center;gap:4%;width:96%;margin:4% auto;padding:3%;border:2px solid #d4e1ff;border-radius:13px;background:linear-gradient(#1c66be,#08265e);color:white;font-size:1.35cqw;font-weight:800;cursor:pointer;text-align:left}.tac-check{display:grid;place-items:center;flex:0 0 16%;aspect-ratio:1;border:2px solid white;border-radius:6px;background:#081b3c;font-size:1.4cqw}.tac-instruction.selected .tac-check{background:#159b39}
+.tac-footer{position:absolute;left:4%;right:4%;bottom:2%;height:11%;display:flex;gap:5%}.tac-footer button{flex:1;border:3px solid #ffce3e;border-radius:20px;background:linear-gradient(#2268c5,#08245f);color:white;font-size:2cqw;font-weight:900;text-shadow:2px 2px #06152a;cursor:pointer}.tac-footer button:last-child{background:linear-gradient(#20b541,#046320)}
+</style>
+</head>
+<body>
+
+<main id="welcome" class="screen">
+ <div class="art">
+  <button class="welcome-hit"
+   aria-label="Welcome"
+   onclick="showMenu()"></button>
+ </div>
+</main>
+
+<section id="menu" class="screen">
+ <div class="office-art">
+  <button class="office-hit new-career"
+   aria-label="New Career"
+   onclick="openCareer()"></button>
+
+  <button class="office-hit continue-career"
+   aria-label="Continue Career"
+   onclick="continueCareer()"></button>
+
+  <button class="office-hit how-to-play"
+   aria-label="How to Play"
+   onclick="officeAction('help')"></button>
+
+  <button class="office-hit settings"
+   aria-label="Settings"
+   onclick="officeAction('settings')"></button>
+
+  <button class="office-hit back"
+   aria-label="Back"
+   onclick="returnWelcome()"></button>
+ </div>
+</section>
+
+<script>
+function showMenu(){
+ document.getElementById('welcome').style.display='none';
+ document.getElementById('menu').style.display='flex';
+}
+function returnWelcome(){
+ document.getElementById('menu').style.display='none';
+ document.getElementById('welcome').style.display='flex';
+}
+function officeAction(action){
+ const messages={
+  new:'New Career screen coming next!',
+  continue:'No saved career yet.',
+  help:'How to Play screen coming soon.',
+  settings:'Settings screen coming soon.'
+ };
+ alert(messages[action] || 'Coming soon.');
+}
+</script>
+
+<section id="career" class="screen">
+ <div class="game-art career-art">
+  <input id="managerName" class="name-input"
+   placeholder="Your name" maxlength="28"
+   aria-label="Manager name">
+  <button class="hit career-choose"
+   aria-label="Choose Your Club"
+   onclick="openClubs()"></button>
+  <button class="hit career-start"
+   aria-label="Start Career"
+   onclick="startCareer()"></button>
+  <button class="hit career-back"
+   aria-label="Back"
+   onclick="showOffice()"></button>
+ </div>
+</section>
+
+<section id="clubs" class="screen">
+ <div class="game-art club-art" id="clubBoard">
+  <button class="hit club-back"
+   aria-label="Back"
+   onclick="backToCareer()"></button>
+  <button class="hit club-confirm"
+   aria-label="Confirm Club"
+   onclick="confirmClub()"></button>
+ </div>
+</section>
+
+<script>
+const teams=[
+ 'Westbridge United','Redmoor Athletic','Ironvale FC',
+ 'Brookfield Town','Seabourne FC','Oakchester United',
+ 'Kingsford Town','Ashbourne Rovers','Northwick Albion',
+ 'Eastport City','Ravenshill FC','Ledgemont Athletic'
+];
+let pendingClub=-1;
+let chosenClub=-1;
+
+function screen(id){
+ for(const name of ['welcome','menu','career','clubs']){
+  document.getElementById(name).style.display=
+    name===id?'flex':'none';
+ }
+}
+function openCareer(){screen('career')}
+function showOffice(){screen('menu')}
+function openClubs(){
+ pendingClub=chosenClub;
+ updateClubSelection();
+ screen('clubs');
+}
+function backToCareer(){screen('career')}
+function chooseClub(i){
+ pendingClub=i;
+ updateClubSelection();
+}
+function updateClubSelection(){
+ document.querySelectorAll('.club-choice')
+  .forEach((b,i)=>{
+   b.classList.toggle('selected',i===pendingClub);
+  });
+}
+function confirmClub(){
+ if(pendingClub<0){
+  alert('Please choose your club.');
+  return;
+ }
+ chosenClub=pendingClub;
+ screen('career');
+}
+function startCareer(){
+ const name=document.getElementById('managerName').value.trim();
+ if(!name){
+  alert('Please enter your manager name.');
+  return;
+ }
+ if(chosenClub<0){
+  alert('Please choose your club.');
+  return;
+ }
+ const career={manager:name,club:teams[chosenClub]};
+ localStorage.setItem('touchlineCareer',JSON.stringify(career));
+ openDashboard();
+}
+const board=document.getElementById('clubBoard');
+teams.forEach((team,i)=>{
+ const button=document.createElement('button');
+ button.className='club-choice';
+ button.setAttribute('aria-label',team);
+ button.style.left=(7.5+(i%3)*30.1)+'%';
+ button.style.top=(34.5+Math.floor(i/3)*11.1)+'%';
+ button.onclick=()=>chooseClub(i);
+ board.appendChild(button);
+});
+</script>
+
+<section id="dashboard" class="screen">
+ <div class="dashboard-art" id="dashboardBoard">
+ 
+</div>
+</section>
+
+<script>
+const dashboardButtons=[
+ 'Squad','Tactics','Fixtures','League Table',
+ 'Transfers','Finances','Next Match','Save Game'
+];
+
+const dashboardBoard=document.getElementById('dashboardBoard');
+
+dashboardButtons.forEach((name,i)=>{
+ const b=document.createElement('button');
+ b.className='dashboard-hit';
+ b.setAttribute('aria-label',name);
+ b.style.left=(13.5+(i%4)*19.2)+'%';
+ b.style.top=(35.5+Math.floor(i/4)*24)+'%';
+ b.onclick=()=>dashboardAction(name);
+ dashboardBoard.appendChild(b);
+});
+
+function dashboardAction(name){
+ if(name==='Save Game'){
+  alert('Career saved successfully.');
+  return;
+ }
+ alert(name+' screen coming next!');
+}
+
+function openDashboard(){
+ for(const id of ['welcome','menu','career','clubs','dashboard']){
+  document.getElementById(id).style.display=
+   id==='dashboard'?'flex':'none';
+ }
+}
+
+function continueCareer(){
+ const saved=localStorage.getItem('touchlineCareer');
+ if(!saved){
+  alert('No saved career found.');
+  return;
+ }
+ openDashboard();
+}
+</script>
+
+<script>
+function updateDashboardLive(){
+ const el=document.getElementById('dashboardLive');
+ if(!el)return;
+ let career={};
+ try{
+  career=JSON.parse(
+   localStorage.getItem('touchlineCareer')||'{}'
+  );
+ }catch(e){}
+ el.textContent=
+  'MANAGER: '+(career.manager||'Unknown')+
+  '     |     CLUB: '+(career.club||'Not selected')+
+  '     |     SEASON: 2026/27';
+}
+document.addEventListener('click',()=>{
+ const d=document.getElementById('dashboard');
+ if(d && d.style.display==='flex'){
+  updateDashboardLive();
+ }
+});
+updateDashboardLive();
+</script>
+
+<section id="squadScreen" class="screen"><div class="squad-art" id="squadArt">
+<div class="sq-title">SQUAD MANAGEMENT</div><div class="sq-message" id="squadStatus" aria-live="polite"></div>
+<div class="sq-panel sq-pitch-panel"><div class="sq-head">TEAM SHAPE</div><div class="sq-form"><button onclick="squadFormationChange(-1)" aria-label="Previous formation">◀</button><span id="squadFormation">4-4-2</span><button onclick="squadFormationChange(1)" aria-label="Next formation">▶</button></div><div class="sq-pitch" id="squadPitch"></div></div>
+<div class="sq-panel sq-xi-panel"><div class="sq-head">STARTING XI (11)</div><div class="sq-cols"><span>#</span><span>PLAYER</span><span>POS</span><span>AGE</span><span>RTG</span></div><div id="squadXI"></div></div>
+<div class="sq-panel sq-side-panel"><div class="sq-side-section"><div class="sq-head">SUBSTITUTES (7)</div><div class="sq-cols"><span>#</span><span>PLAYER</span><span>POS</span><span>AGE</span><span>RTG</span></div><div id="squadSubs"></div></div><div class="sq-side-section"><div class="sq-head">RESERVES (7)</div><div class="sq-cols"><span>#</span><span>PLAYER</span><span>POS</span><span>AGE</span><span>RTG</span></div><div id="squadReserves"></div></div></div>
+<div class="sq-footer"><button onclick="squadBack()">BACK</button><button onclick="squadAutoSelect()">AUTO SELECT</button><button onclick="squadConfirm()">CONFIRM SQUAD</button></div>
+</div></section>
+
+<script>
+const squadNames=[
+ ['Jack Bennett','GK',27,72],
+ ['Chris Morgan','DR',26,68],
+ ['Ryan Cooper','DC',28,70],
+ ['Mark Thompson','DC',29,69],
+ ['James Walker','DL',27,68],
+ ['Luke Harris','MC',28,71],
+ ['Paul Edwards','ML',27,69],
+ ['David Clarke','MC',29,70],
+ ['Jack Morris','MR',26,69],
+ ['Sam Turner','AMC',28,73],
+ ['Ben Williams','ST',30,74],
+ ['Tom Richards','GK',25,67],
+ ['Harry Price','MC',24,69],
+ ['Adam Wilson','MC',25,68],
+ ['Daniel Foster','ST',27,71],
+ ['Michael Green','ST',28,69],
+ ['Nathan Hill','ST',26,68],
+ ['Steve Bailey','DR',25,67],
+ ['Isobel Carter','ML',24,66],
+ ['Dan Roberts','MC',24,66],
+ ['Mark Reeves','DC',27,67],
+ ['Liam Brooks','MR',23,66],
+ ['Callum White','AMC',24,67],
+ ['Alex Reid','ST',25,66],
+ ['Oliver James','DC',26,68]
+];
+
+const formations=['4-4-2','4-3-3','3-5-2'];
+let squadFormationIndex=0;
+let squadSelected=-1;
+let squadPlayers=squadNames.map((p,i)=>({
+ id:i,
+ name:p[0],
+ pos:p[1],
+ age:p[2],
+ rating:p[3]
+}));
+
+function squadSave(){
+ const career=JSON.parse(
+  localStorage.getItem('touchlineCareer')||'{}'
+ );
+ if(!career.club)return;
+ localStorage.setItem(
+  'touchlineSquad_'+career.club,
+  JSON.stringify({
+   players:squadPlayers,
+   formation:squadFormationIndex,
+   squadOrderVersion:2
+  })
+ );
+}
+
+function squadLoad(){
+ const career=JSON.parse(
+  localStorage.getItem('touchlineCareer')||'{}'
+ );
+ const saved=localStorage.getItem(
+  'touchlineSquad_'+career.club
+ );
+ squadPlayers=squadNames.map((p,i)=>({
+  id:i,name:p[0],pos:p[1],age:p[2],rating:p[3]
+ }));
+ squadFormationIndex=0;
+ if(!saved){
+  const order=legacySlotOrder[0];
+  squadPlayers=[...order.map(i=>squadPlayers[i]),...squadPlayers.slice(11)];
+ }
+ if(saved){
+  try{
+   const data=JSON.parse(saved);
+   if(Array.isArray(data.players) &&
+      data.players.length>=11 && data.players.length<=25){
+    squadPlayers=data.players;
+     if(data.squadOrderVersion!==2 && data.players.length===25){
+      const order=legacySlotOrder[((data.formation||0)%3+3)%3];
+      squadPlayers=[...order.map(i=>squadPlayers[i]),...squadPlayers.slice(11)];
+     }
+   }
+   if(Number.isInteger(data.formation)){
+    squadFormationIndex=
+     ((data.formation%3)+3)%3;
+   }
+  }catch(e){}
+ }
+}
+
+// Squad slots are always ordered goalkeeper, defence, midfield, attack.
+const squadLayouts=[
+ [{p:'GK',x:50,y:91},{p:'DR',x:85,y:69},{p:'DC',x:62,y:69},{p:'DC',x:38,y:69},{p:'DL',x:15,y:69},{p:'MR',x:85,y:39},{p:'MC',x:62,y:39},{p:'MC',x:38,y:39},{p:'ML',x:15,y:39},{p:'ST',x:62,y:16},{p:'ST',x:38,y:16}],
+ [{p:'GK',x:50,y:91},{p:'DR',x:85,y:72},{p:'DC',x:62,y:72},{p:'DC',x:38,y:72},{p:'DL',x:15,y:72},{p:'MC',x:76,y:50},{p:'MC',x:50,y:50},{p:'MC',x:24,y:50},{p:'MR',x:81,y:30},{p:'ST',x:50,y:17},{p:'ML',x:19,y:30}],
+ [{p:'GK',x:50,y:91},{p:'DC',x:76,y:73},{p:'DC',x:50,y:73},{p:'DC',x:24,y:73},{p:'MR',x:88,y:38},{p:'MC',x:68,y:44},{p:'MC',x:50,y:51},{p:'MC',x:32,y:44},{p:'ML',x:12,y:38},{p:'ST',x:62,y:15},{p:'ST',x:38,y:15}]
+];
+// Maps the previous forward-to-goalkeeper slot ordering to the new order.
+const legacySlotOrder=[
+ [10,9,8,7,6,5,4,3,2,1,0],
+ [10,9,8,7,6,5,4,3,2,0,1],
+ [10,9,8,7,6,5,4,3,2,1,0]
+];
+function squadCompatible(player,slot){
+ return (player.pos==='GK')===(slot==='GK');
+}
+function squadPick(i){
+ if(squadSelected===-1){squadSelected=i;squadStatus.textContent='Tap another player to swap';}
+ else if(squadSelected===i){squadSelected=-1;squadStatus.textContent='';}
+ else{
+  const a=squadSelected,layout=squadLayouts[squadFormationIndex];
+  if((a<11&&!squadCompatible(squadPlayers[i],layout[a].p))||(i<11&&!squadCompatible(squadPlayers[a],layout[i].p))){
+   squadStatus.textContent='Goalkeepers must stay in goal';
+  }else{
+   [squadPlayers[a],squadPlayers[i]]=[squadPlayers[i],squadPlayers[a]];
+   squadStatus.textContent='Players swapped — confirm to save';
+  }
+  squadSelected=-1;
+ }
+ squadRender();
+}
+function squadRender(){
+ const layout=squadLayouts[squadFormationIndex];
+ document.getElementById('squadFormation').textContent=formations[squadFormationIndex];
+ for(const id of ['squadXI','squadSubs','squadReserves','squadPitch'])document.getElementById(id).replaceChildren();
+ squadPlayers.forEach((p,i)=>{
+  const row=document.createElement('button');row.type='button';row.className='sq-row'+(i===squadSelected?' active':'');
+  [i+1,p.name,p.pos,p.age,p.rating].forEach(v=>{const span=document.createElement('span');span.textContent=v;row.appendChild(span)});
+  row.onclick=()=>squadPick(i);
+  document.getElementById(i<11?'squadXI':i<18?'squadSubs':'squadReserves').appendChild(row);
+  if(i<11){
+   const marker=document.createElement('button');marker.type='button';marker.className='sq-marker'+(layout[i].p==='GK'?' goalkeeper':'')+(i===squadSelected?' active':'');
+   marker.style.left=layout[i].x+'%';marker.style.top=layout[i].y+'%';
+   marker.textContent=p.name.trim().split(/\s+/).slice(-1)[0];marker.title=p.name+' ('+p.rating+')';marker.setAttribute('aria-label',p.name+' playing '+layout[i].p);
+   marker.onclick=()=>squadPick(i);document.getElementById('squadPitch').appendChild(marker);
+  }
+ });
+}
+function squadFormationChange(direction){
+ squadFormationIndex=(squadFormationIndex+direction+formations.length)%formations.length;
+ // Reassign the existing XI to suitable slots; do not silently replace players.
+ const slots=squadLayouts[squadFormationIndex];
+ const pool=squadPlayers.slice(0,11), ordered=[];
+ const score=(p,slot)=>p.pos===slot?100:(p.pos==='GK'&&slot==='GK'?100:(p.pos==='GK'||slot==='GK'?-1000:(({DC:['DL','DR'],DL:['DC','ML'],DR:['DC','MR'],MC:['AMC','ML','MR'],ML:['MC','AMC'],MR:['MC','AMC'],ST:['AMC'],AMC:['MC','ST']}[slot]||[]).includes(p.pos)?50:0)));
+ for(const slot of slots){
+  let best=0;
+  for(let i=1;i<pool.length;i++)if(score(pool[i],slot.p)>score(pool[best],slot.p))best=i;
+  ordered.push(pool.splice(best,1)[0]);
+ }
+ squadPlayers=[...ordered,...squadPlayers.slice(11)];
+ squadSelected=-1;squadStatus.textContent='Formation: '+formations[squadFormationIndex];squadRender();
+}
+function squadAutoSelect(){
+ const layout=squadLayouts[squadFormationIndex];const remaining=[...squadPlayers];const selected=[];
+ const suitability=(player,slot)=>{
+  if(!squadCompatible(player,slot))return -10000;
+  if(player.pos===slot)return player.rating+12;
+  const groups={DC:['DL','DR'],DL:['DC','ML'],DR:['DC','MR'],MC:['AMC','ML','MR'],ML:['MC','AMC'],MR:['MC','AMC'],ST:['AMC'],AMC:['MC','ST']};
+  return player.rating+((groups[slot]||[]).includes(player.pos)?3:-10);
+ };
+ for(const slot of layout){
+  let best=0;
+  for(let i=1;i<remaining.length;i++)if(suitability(remaining[i],slot.p)>suitability(remaining[best],slot.p))best=i;
+  selected.push(remaining.splice(best,1)[0]);
+ }
+ squadPlayers=[...selected,...remaining];squadSelected=-1;
+ squadStatus.textContent='Strongest available team selected — confirm to save';squadRender();
+}
+function squadConfirm(){squadSave();squadSelected=-1;openDashboard();}
+function squadBack(){squadSelected=-1;squadLoad();openDashboard();}
+function openSquad(){
+ squadLoad();squadSelected=-1;squadStatus.textContent='Tap two players to swap';
+ for(const id of ['welcome','menu','career','clubs','dashboard','squadScreen']){
+  const el=document.getElementById(id);if(el)el.style.display=id==='squadScreen'?'flex':'none';
+ }
+ squadRender();
+}
+const originalDashboardAction=dashboardAction;
+dashboardAction=function(name){if(name==='Squad'){openSquad();return;}originalDashboardAction(name)};
+</script>
+
+<section id="tacticsScreen" class="screen"><div class="tac-art">
+<div class="tac-title">TACTICS</div>
+<div class="tac-panel tac-left"><div class="tac-heading">FORMATION</div><div id="tacFormations"></div><div class="tac-sep"></div><div class="tac-heading">MENTALITY</div><div id="tacMentalities"></div></div>
+<div class="tac-panel tac-middle"><div class="tac-pitch" id="tacPitch"></div></div>
+<div class="tac-panel tac-right"><div class="tac-heading">TEAM INSTRUCTIONS</div><div id="tacInstructions"></div></div>
+<div class="tac-footer"><button type="button" onclick="tacticsBack()">BACK</button><button type="button" onclick="tacticsConfirm()">CONFIRM TACTICS</button></div>
+</div></section>
+<script>
+const tacticInstructions=['Play Wider','Use The Wings','Through Balls','Press Higher','Hold Possession'];
+const tacticMentalities=['Attacking','Balanced','Defensive'];
+let tacticMentality='Balanced', tacticFlags=[false,false,false,false,false];
+function tacticKey(){let career={};try{career=JSON.parse(localStorage.getItem('touchlineCareer')||'{}')}catch(e){}return 'touchlineTactics_'+(career.club||'default')}
+function tacticsLoad(){
+ squadLoad();
+ tacticMentality='Balanced';tacticFlags=[false,false,false,false,false];
+ try{const saved=JSON.parse(localStorage.getItem(tacticKey())||'null');if(saved){if(tacticMentalities.includes(saved.mentality))tacticMentality=saved.mentality;if(Array.isArray(saved.instructions)&&saved.instructions.length===5)tacticFlags=saved.instructions.map(Boolean)}}catch(e){}
+}
+function tacticsRender(){
+ const forms=document.getElementById('tacFormations'),mental=document.getElementById('tacMentalities'),inst=document.getElementById('tacInstructions'),pitch=document.getElementById('tacPitch');
+ forms.replaceChildren();mental.replaceChildren();inst.replaceChildren();pitch.replaceChildren();
+ formations.forEach((f,i)=>{const b=document.createElement('button');b.type='button';b.className='tac-choice'+(squadFormationIndex===i?' selected':'');b.textContent=f;b.onclick=()=>{if(squadFormationIndex!==i){squadFormationChange((i-squadFormationIndex+formations.length)%formations.length)}tacticsRender()};forms.appendChild(b)});
+ tacticMentalities.forEach(m=>{const b=document.createElement('button');b.type='button';b.className='tac-choice'+(tacticMentality===m?' selected':'');b.textContent=m;b.onclick=()=>{tacticMentality=m;tacticsRender()};mental.appendChild(b)});
+ tacticInstructions.forEach((label,i)=>{const b=document.createElement('button');b.type='button';b.className='tac-instruction'+(tacticFlags[i]?' selected':'');b.setAttribute('aria-pressed',String(tacticFlags[i]));const c=document.createElement('span');c.className='tac-check';c.textContent=tacticFlags[i]?'✓':'';const t=document.createElement('span');t.textContent=label;b.append(c,t);b.onclick=()=>{tacticFlags[i]=!tacticFlags[i];tacticsRender()};inst.appendChild(b)});
+ squadLayouts[squadFormationIndex].forEach((slot,i)=>{const p=squadPlayers[i];if(!p)return;const b=document.createElement('span');b.className='tac-player'+(slot.p==='GK'?' gk':'');b.style.left=slot.x+'%';b.style.top=slot.y+'%';b.textContent=p.name.trim().split(/\s+/).slice(-1)[0];b.title=p.name;pitch.appendChild(b)});
+}
+function openTactics(){tacticsLoad();for(const id of ['welcome','menu','career','clubs','dashboard','squadScreen','tacticsScreen']){const el=document.getElementById(id);if(el)el.style.display=id==='tacticsScreen'?'flex':'none'}tacticsRender()}
+function tacticsBack(){openDashboard()}
+function tacticsConfirm(){squadSave();localStorage.setItem(tacticKey(),JSON.stringify({mentality:tacticMentality,instructions:tacticFlags}));openDashboard()}
+const tacticsPreviousDashboardAction=dashboardAction;
+dashboardAction=function(name){if(name==='Tactics'){openTactics();return}tacticsPreviousDashboardAction(name)};
+</script>
+<style>
+#fixturesScreen,#leagueScreen{display:none;background:#06152a}
+.fl-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;container-type:inline-size;overflow:hidden;color:#fff;background:linear-gradient(110deg,#091a3bc9,#07132bd0),url('assets/manager-dashboard.png') center/100% 100% no-repeat}
+.fl-title{position:absolute;left:25%;top:3%;width:50%;height:12%;border:3px solid #ffcf42;border-radius:50px;background:linear-gradient(#1765c6,#071c50);display:grid;place-items:center;font-size:3.5cqw;font-weight:900;text-shadow:2px 3px #00132b}
+.fl-panel{position:absolute;left:11%;top:19%;width:78%;height:65%;border:3px solid #ffcf42;border-radius:18px;background:linear-gradient(#12458e,#061c49);padding:1.5%;overflow:hidden}
+.fl-weekbar{height:12%;display:flex;align-items:center;justify-content:center;gap:3%;font-size:1.6cqw;font-weight:900;color:#ffdf70}
+.fl-weekbar button{height:95%;min-width:8%;border:2px solid #ffcf42;border-radius:10px;background:#1457a7;color:white;font-size:1.8cqw;cursor:pointer}
+.fl-fixture-grid{height:85%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:2%}
+.fl-match{display:grid;grid-template-columns:1fr 14% 1fr;align-items:center;gap:1%;padding:1% 2%;border:2px solid #507fc0;border-radius:12px;background:#153d79;text-align:center;font-size:1.35cqw;font-weight:800}
+.fl-match.mine{border-color:#ffdc4d;background:#245ca3}
+.fl-score{color:#ffe078;font-size:1.65cqw;white-space:nowrap}
+.fl-table{width:100%;border-collapse:collapse;font-size:1.33cqw;font-weight:750;text-align:center;table-layout:fixed}
+.fl-table th{color:#ffdf70;border-bottom:2px solid #ffcf42;height:3.4cqw}
+.fl-table td{height:3.05cqw;border-bottom:1px solid #ffffff30;background:#20519a}
+.fl-table tr:nth-child(even) td{background:#143a78}
+.fl-table tr.mine td{background:#84601a;color:white}
+.fl-table th:nth-child(2),.fl-table td:nth-child(2){width:39%;text-align:left;padding-left:1%}
+.fl-subtitle{text-align:center;color:#ffe28b;font-size:1.25cqw;height:7%;font-weight:bold}
+/* League table only: fit all twelve clubs without scrolling. */
+#leagueScreen .fl-table{font-size:1.18cqw}
+#leagueScreen .fl-table th{height:2.8cqw}
+#leagueScreen .fl-table td{height:2.45cqw}
+.fl-footer{position:absolute;left:12%;right:12%;bottom:3%;height:10%;display:flex;gap:3%}
+.fl-footer button{flex:1;border:3px solid #ffcf42;border-radius:18px;background:linear-gradient(#2268c5,#08245f);color:white;font-size:1.9cqw;font-weight:900;cursor:pointer}
+</style>
+<section id="fixturesScreen" class="screen"><div class="fl-art"><div class="fl-title">FIXTURES &amp; RESULTS</div><div class="fl-panel"><div class="fl-weekbar"><button onclick="changeFixtureWeek(-1)" aria-label="Previous matchweek">◀</button><span id="fixtureWeekLabel">MATCHWEEK 1</span><button onclick="changeFixtureWeek(1)" aria-label="Next matchweek">▶</button></div><div class="fl-fixture-grid" id="fixtureMatches"></div></div><div class="fl-footer"><button onclick="openDashboard()">BACK</button><button onclick="openLeague()">LEAGUE TABLE</button></div></div></section>
+<section id="leagueScreen" class="screen"><div class="fl-art"><div class="fl-title">LEAGUE TABLE</div><div class="fl-panel"><div class="fl-subtitle">SEASON 2026/27 · 12 CLUBS</div><table class="fl-table"><thead><tr><th>POS</th><th>CLUB</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th></tr></thead><tbody id="leagueRows"></tbody></table></div><div class="fl-footer"><button onclick="openDashboard()">BACK</button><button onclick="openFixtures()">FIXTURES</button></div></div></section>
+<script>
+// Double round robin: 22 matchweeks, six matches each.
+function makeSchedule(){
+ const circle=teams.map((_,i)=>i),weeks=[];
+ for(let round=0;round<11;round++){
+  const matches=[];
+  for(let j=0;j<6;j++){
+   const a=circle[j],b=circle[11-j];
+   matches.push({home:round%2===0?a:b,away:round%2===0?b:a,homeGoals:null,awayGoals:null});
+  }
+  weeks.push(matches);
+  circle.splice(1,0,circle.pop());
+ }
+ return [...weeks,...weeks.map(w=>w.map(m=>({home:m.away,away:m.home,homeGoals:null,awayGoals:null})))];
+}
+const initialSchedule=makeSchedule();
+let leagueMatches=[],fixtureWeek=0;
+function careerClub(){try{return JSON.parse(localStorage.getItem('touchlineCareer')||'{}').club||''}catch(e){return ''}}
+function matchStorageKey(){return 'touchlineMatches_'+careerClub()}
+function loadMatches(){
+ let saved=null;try{saved=JSON.parse(localStorage.getItem(matchStorageKey())||'null')}catch(e){}
+ leagueMatches=Array.isArray(saved)&&saved.length===22&&saved.every(w=>Array.isArray(w)&&w.length===6)?saved:JSON.parse(JSON.stringify(initialSchedule));
+}
+function saveMatches(){localStorage.setItem(matchStorageKey(),JSON.stringify(leagueMatches))}
+function showFootballScreen(id){
+ for(const name of ['welcome','menu','career','clubs','dashboard','squadScreen','tacticsScreen','fixturesScreen','leagueScreen']){
+  const el=document.getElementById(name);if(el)el.style.display=name===id?'flex':'none';
+ }
+}
+function openFixtures(){loadMatches();const next=currentWeek();fixtureWeek=next<0?21:next;showFootballScreen('fixturesScreen');renderFixtures()}
+function changeFixtureWeek(n){fixtureWeek=(fixtureWeek+n+22)%22;renderFixtures()}
+function renderFixtures(){
+ document.getElementById('fixtureWeekLabel').textContent='MATCHWEEK '+(fixtureWeek+1)+' OF 22';
+ const host=document.getElementById('fixtureMatches');host.replaceChildren();const club=careerClub();
+ for(const m of leagueMatches[fixtureWeek]){
+  const el=document.createElement('div');el.className='fl-match'+(teams[m.home]===club||teams[m.away]===club?' mine':'');
+  const home=document.createElement('span'),score=document.createElement('span'),away=document.createElement('span');
+  home.textContent=teams[m.home];away.textContent=teams[m.away];score.className='fl-score';
+  score.textContent=Number.isInteger(m.homeGoals)&&Number.isInteger(m.awayGoals)?m.homeGoals+'–'+m.awayGoals:'v';
+  el.append(home,score,away);host.appendChild(el);
+ }
+}
+function openLeague(){loadMatches();showFootballScreen('leagueScreen');renderLeague()}
+function renderLeague(){
+ const stats=teams.map((name,id)=>({name,id,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}));
+ for(const week of leagueMatches)for(const m of week){
+  if(!Number.isInteger(m.homeGoals)||!Number.isInteger(m.awayGoals))continue;
+  const h=stats[m.home],a=stats[m.away];h.p++;a.p++;h.gf+=m.homeGoals;h.ga+=m.awayGoals;a.gf+=m.awayGoals;a.ga+=m.homeGoals;
+  if(m.homeGoals>m.awayGoals){h.w++;h.pts+=3;a.l++}else if(m.homeGoals<m.awayGoals){a.w++;a.pts+=3;h.l++}else{h.d++;a.d++;h.pts++;a.pts++}
+ }
+ stats.sort((a,b)=>b.pts-a.pts||((b.gf-b.ga)-(a.gf-a.ga))||b.gf-a.gf||a.name.localeCompare(b.name));
+ const host=document.getElementById('leagueRows');host.replaceChildren();
+ stats.forEach((t,i)=>{const tr=document.createElement('tr');if(t.name===careerClub())tr.className='mine';
+  [i+1,t.name,t.p,t.w,t.d,t.l,(t.gf-t.ga>0?'+':'')+(t.gf-t.ga),t.pts].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});host.appendChild(tr);
+ });
+}
+const fixturesOriginalOpenDashboard=openDashboard;
+openDashboard=function(){
+ for(const id of ['squadScreen','tacticsScreen','fixturesScreen','leagueScreen']){
+  const el=document.getElementById(id);if(el)el.style.display='none';
+ }
+ fixturesOriginalOpenDashboard();
+};
+const fixturesPreviousDashboardAction=dashboardAction;
+dashboardAction=function(name){if(name==='Fixtures'){openFixtures();return}if(name==='League Table'){openLeague();return}fixturesPreviousDashboardAction(name)};
+</script>
+
+<style>
+#transfersScreen,#financesScreen,#nextMatchScreen,#resultsScreen,#saveScreen{display:none;background:#06152a}
+.ex-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;container-type:inline-size;color:white;background:linear-gradient(110deg,#091a3bca,#07132bdf),url('assets/manager-dashboard.png') center/100% 100% no-repeat;font-family:Arial,sans-serif}
+.ex-heading{position:absolute;top:3%;left:23%;width:54%;height:12%;border:3px solid #ffce42;border-radius:60px;background:linear-gradient(#2169c8,#071b4d);display:grid;place-items:center;font-size:3.2cqw;font-weight:900;text-shadow:2px 3px #00112b}
+.ex-body{position:absolute;top:19%;left:10%;width:80%;height:65%;border:3px solid #ffce42;border-radius:18px;background:linear-gradient(#16488e,#061b47);padding:2%;overflow:auto;font-size:1.45cqw}
+.ex-footer{position:absolute;bottom:3%;left:10%;width:80%;height:10%;display:flex;gap:2%}
+.ex-footer button,.ex-button{border:2px solid #ffce42;border-radius:14px;background:linear-gradient(#2670d0,#07265f);color:white;font-weight:900;font-size:1.7cqw;cursor:pointer;padding:.7% 2%}
+.ex-footer button{flex:1}.ex-footer .primary,.ex-button.primary{background:linear-gradient(#20b744,#006021)}
+.ex-row{display:grid;grid-template-columns:2.4fr .7fr .7fr .7fr 1.1fr;gap:1%;align-items:center;padding:.6% 1%;background:#22549a;margin-bottom:.4%;border-radius:5px;font-size:1.2cqw}
+.ex-row:nth-child(even){background:#153b79}.ex-row button{font-size:1.05cqw;padding:3%;border:1px solid #ffce42;border-radius:8px;background:#075c36;color:white}
+.ex-tabs{display:flex;gap:2%;margin-bottom:1%}.ex-tabs button{flex:1}.ex-metric{padding:2%;margin:1% 0;background:#24539a;border-radius:12px;font-size:1.8cqw}.ex-center{text-align:center;font-size:2.4cqw;line-height:1.65}.ex-note{color:#ffdc75;font-size:1.25cqw;text-align:center;margin:1%}
+</style>
+<section id="transfersScreen" class="screen"><div class="ex-art"><div class="ex-heading">TRANSFER MARKET</div><div class="ex-body"><div class="ex-tabs"><button class="ex-button" onclick="transferTab='buy';renderTransfers()">BUY PLAYERS</button><button class="ex-button" onclick="transferTab='sell';renderTransfers()">SELL PLAYERS</button></div><div class="ex-note" id="transferBudget"></div><div class="ex-row"><b>PLAYER</b><b>POS</b><b>AGE</b><b>RTG</b><b>PRICE</b></div><div id="transferRows"></div></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button onclick="openFinances()">FINANCES</button></div></div></section>
+<section id="financesScreen" class="screen"><div class="ex-art"><div class="ex-heading">CLUB FINANCES</div><div class="ex-body" id="financeBody"></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button onclick="openTransfers()">TRANSFERS</button></div></div></section>
+<section id="nextMatchScreen" class="screen"><div class="ex-art"><div class="ex-heading">NEXT MATCH</div><div class="ex-body ex-center" id="nextMatchBody"></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button class="primary" id="playInstantButton" onclick="playInstantMatch()">PLAY INSTANT MATCH</button></div></div></section>
+<section id="resultsScreen" class="screen"><div class="ex-art"><div class="ex-heading">FULL TIME</div><div class="ex-body ex-center" id="resultsBody"></div><div class="ex-footer"><button class="primary" onclick="openDashboard()">CONTINUE TO DASHBOARD</button><button onclick="openLeague()">LEAGUE TABLE</button></div></div></section>
+<section id="saveScreen" class="screen"><div class="ex-art"><div class="ex-heading">SAVE CAREER</div><div class="ex-body ex-center" id="saveBody"></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button class="primary" onclick="saveCareerNow()">SAVE GAME</button></div></div></section>
+<script>
+const extraScreens=['transfersScreen','financesScreen','nextMatchScreen','resultsScreen','saveScreen'];
+function showExtra(id){showFootballScreen(id);for(const n of extraScreens)document.getElementById(n).style.display=n===id?'flex':'none'}
+const beforeExtraDashboard=openDashboard;
+openDashboard=function(){for(const n of extraScreens)document.getElementById(n).style.display='none';beforeExtraDashboard();updateDashboardLive()};
+let transferTab='buy';
+function financeKey(){return 'touchlineFinance_'+careerClub()}
+function financeData(){let v;try{v=JSON.parse(localStorage.getItem(financeKey())||'null')}catch(e){}return v&&typeof v.budget==='number'?v:{budget:35000,balance:245000,spent:0,received:0}}
+function storeFinance(f){localStorage.setItem(financeKey(),JSON.stringify(f))}
+function pounds(n){return '£'+Math.round(n).toLocaleString('en-GB')}
+function playerPrice(p){return Math.max(1000,Math.round((p.rating-55)*650+(30-p.age)*250)/500*500)}
+const marketNames=[['Ethan Cole','DC',23,72],['Oliver Stone','MC',24,74],['Leo Hart','ST',22,73],['Noah Blake','GK',25,70],['Finn Carter','DR',26,71],['Mason Ford','ML',24,70],['Jacob Reed','AMC',22,72],['Oscar Lane','DL',25,69],['George Hayes','MR',23,71],['Archie Brooks','ST',27,72]];
+// Windows: pre-season through matchweek 5, and matchweeks 12–14.
+// The completed-match count determines the next matchweek.
+function transferWindow(){
+ loadMatches();
+ const completed=leagueMatches.filter(week=>week.some(m=>(teams[m.home]===careerClub()||teams[m.away]===careerClub())&&Number.isInteger(m.homeGoals)&&Number.isInteger(m.awayGoals))).length;
+ if(completed===22)return {open:true,id:'offseason',label:'END-OF-SEASON WINDOW',remaining:null};
+ if(completed<5)return {open:true,id:'summer',label:'SUMMER WINDOW',remaining:5-completed};
+ if(completed>=11&&completed<14)return {open:true,id:'winter',label:'WINTER WINDOW',remaining:14-completed};
+ return {open:false,id:'closed',label:completed<11?'CLOSED — WINTER WINDOW OPENS AT MATCHWEEK 12':'CLOSED — REOPENS AT END OF SEASON',remaining:null};
+}
+function marketKey(){return 'touchlineMarket_'+careerClub()+'_'+transferWindow().id}
+// Each window has its own consistent pool; purchases persist for that window.
+const transferFirst=['Ethan','Oliver','Leo','Noah','Finn','Mason','Jacob','Oscar','George','Archie','Theo','Harvey','Alfie','Riley','Freddie','Max','Charlie','Isaac','Toby','Jude','Ellis','Luca','Henry','Reuben','Dylan','Logan','Hugo','Jamie','Rowan','Felix'];
+const transferLast=['Cole','Stone','Hart','Blake','Carter','Ford','Reed','Lane','Hayes','Brooks','Barker','Wells','Dawson','Hughes','Palmer','Fletcher','Woods','Knight','Fisher','Webb','Marsh','Porter','Cross','Mills','Perry','Bennett','Fox','Holt','Bishop','Turner'];
+const transferPositions=['DC','MC','ST','GK','DR','ML','AMC','DL','MR','ST','DC','MC','ST','DR','MC','DL','GK','MR','ML','AMC'];
+function freshMarket(windowId){
+ const offset=windowId==='winter'?11:windowId==='offseason'?21:0;
+ return Array.from({length:14},(_,i)=>{
+  const n=i+offset;
+  return {id:1000+offset*100+i,name:transferFirst[n%transferFirst.length]+' '+transferLast[(n*7+offset)%transferLast.length],pos:transferPositions[(n*3+i)%transferPositions.length],age:21+(n*3)%10,rating:65+(n*7)%11};
+ });
+}
+function marketPlayers(){let v;try{v=JSON.parse(localStorage.getItem(marketKey())||'null')}catch(e){}return Array.isArray(v)?v:freshMarket(transferWindow().id)}
+function openTransfers(){squadLoad();transferTab='buy';showExtra('transfersScreen');renderTransfers()}
+function renderTransfers(){
+ const f=financeData(),host=document.getElementById('transferRows'),win=transferWindow();host.replaceChildren();
+ document.getElementById('transferBudget').textContent=win.label+(win.open&&win.remaining!==null?' · '+win.remaining+' MATCH'+(win.remaining===1?'':'ES')+' REMAINING':'')+'  |  BUDGET: '+pounds(f.budget)+'  |  SQUAD: '+squadPlayers.length+'/25';
+ if(!win.open){host.textContent='Transfers are closed. You can view your squad and finances, but cannot buy or sell until the next window.';return}
+ const players=[...(transferTab==='buy'?marketPlayers():squadPlayers)].sort((a,b)=>b.rating-a.rating||a.name.localeCompare(b.name));
+ if(!players.length){host.textContent='No players available.';return}
+ players.forEach(p=>{const row=document.createElement('div');row.className='ex-row';[p.name,p.pos,p.age,p.rating].forEach(x=>{const el=document.createElement('span');el.textContent=x;row.appendChild(el)});const b=document.createElement('button');b.textContent=(transferTab==='buy'?'BUY ':'SELL ')+pounds(playerPrice(p));b.onclick=()=>doTransfer(p);row.appendChild(b);host.appendChild(row)});
+}
+function doTransfer(p){
+ const win=transferWindow();if(!win.open){alert('Transfer window is closed.');renderTransfers();return}
+ const f=financeData(),price=playerPrice(p);
+ if(transferTab==='buy'){
+  if(!marketPlayers().some(x=>x.id===p.id)){alert('This player is no longer available.');renderTransfers();return}
+  if(squadPlayers.length>=25){alert('Squad limit is 25. Sell a player first.');return}
+  if(f.budget<price){alert('Insufficient transfer budget.');return}
+  if(!confirm('Sign '+p.name+' for '+pounds(price)+'?'))return;
+  f.budget-=price;f.balance-=price;f.spent+=price;squadPlayers.push(p);
+  localStorage.setItem(marketKey(),JSON.stringify(marketPlayers().filter(x=>x.id!==p.id)));
+ }else{
+  const saleIndex=squadPlayers.findIndex(x=>x.id===p.id);
+  if(saleIndex<0){alert('Player is not available to sell.');renderTransfers();return}
+  if(squadPlayers.length<=11){alert('You must keep at least 11 players. Sign a replacement before selling.');return}
+  let replacementIndex=-1;
+  if(saleIndex<11){
+   const needsGK=squadLayouts[squadFormationIndex][saleIndex].p==='GK';
+   const candidates=squadPlayers.map((player,i)=>({player,i})).filter(x=>x.i>=11 && (x.player.pos==='GK')===needsGK);
+   if(!candidates.length){alert(needsGK?'You need another goalkeeper before selling your starting goalkeeper.':'You need a suitable substitute or reserve before selling this starter.');return}
+   candidates.sort((a,b)=>(Number(tlAvailable(b.player))-Number(tlAvailable(a.player)))||b.player.rating-a.player.rating);
+   replacementIndex=candidates[0].i;
+  }
+  if(!confirm('Sell '+p.name+' for '+pounds(price)+'?'))return;
+  if(replacementIndex>=0){[squadPlayers[saleIndex],squadPlayers[replacementIndex]]=[squadPlayers[replacementIndex],squadPlayers[saleIndex]];}
+  f.budget+=price;f.balance+=price;f.received+=price;squadPlayers=squadPlayers.filter(x=>x.id!==p.id);
+ }
+ storeFinance(f);squadSave();renderTransfers();
+}
+function openFinances(){showExtra('financesScreen');const f=financeData();document.getElementById('financeBody').innerHTML='<div class="ex-metric">CLUB BALANCE: '+pounds(f.balance)+'</div><div class="ex-metric">TRANSFER BUDGET: '+pounds(f.budget)+'</div><div class="ex-metric">TRANSFER SPENDING: '+pounds(f.spent)+'</div><div class="ex-metric">PLAYER SALES: '+pounds(f.received)+'</div><p class="ex-note">Transfer activity updates these figures automatically.</p>'}
+function currentWeek(){loadMatches();return leagueMatches.findIndex(w=>w.some(m=>teams[m.home]===careerClub()&&m.homeGoals===null||teams[m.away]===careerClub()&&m.awayGoals===null))}
+function openNextMatch(){const w=currentWeek();showExtra('nextMatchScreen');const box=document.getElementById('nextMatchBody'),button=document.getElementById('playInstantButton');if(w<0){box.textContent='Season complete — all 22 matches played.';button.disabled=true;return}button.disabled=false;const m=leagueMatches[w].find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());box.replaceChildren();const lines=['MATCHWEEK '+(w+1)+' OF 22',teams[m.home]+'  v  '+teams[m.away],teams[m.home]===careerClub()?'HOME MATCH':'AWAY MATCH','Formation: '+formations[squadFormationIndex]+'  |  Mentality: '+tacticMentality,'Press PLAY INSTANT MATCH for the result'];lines.forEach(x=>{const d=document.createElement('div');d.textContent=x;box.appendChild(d)})}
+function goals(){let n=0;while(n<6&&Math.random()<.48)n++;return n}
+function playInstantMatch(){const w=currentWeek();if(w<0)return;const matches=leagueMatches[w],my=matches.find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());if(!my)return;const f=financeData();for(const m of matches){if(m.homeGoals!==null)continue;const score=tlSimulateFixture(m,w);m.homeGoals=score[0];m.awayGoals=score[1]}saveMatches();const mineHome=teams[my.home]===careerClub(),ours=mineHome?my.homeGoals:my.awayGoals;const attackers=squadPlayers.slice(0,11).filter(p=>p.pos==='ST'||p.pos==='AMC'||p.pos==='MC');const scorers=Array.from({length:ours},()=>tlChooseScorer(squadPlayers.slice(0,11)));const shotsHome=my.homeGoals+4+Math.floor(Math.random()*9),shotsAway=my.awayGoals+4+Math.floor(Math.random()*9);const possession=45+Math.floor(Math.random()*11);const box=document.getElementById('resultsBody');box.replaceChildren();[teams[my.home]+'  '+my.homeGoals+' – '+my.awayGoals+'  '+teams[my.away],'Matchweek '+(w+1),'Your goalscorers: '+(scorers.join(', ')||'None'),'Shots: '+shotsHome+' – '+shotsAway,'Shots on target: '+Math.min(shotsHome,my.homeGoals+2+Math.floor(Math.random()*3))+' – '+Math.min(shotsAway,my.awayGoals+2+Math.floor(Math.random()*3)),'Possession: '+possession+'% – '+(100-possession)+'%','Corners: '+(2+Math.floor(Math.random()*8))+' – '+(2+Math.floor(Math.random()*8))].forEach(t=>{const d=document.createElement('div');d.textContent=t;box.appendChild(d)});localStorage.setItem('touchlineLastResult_'+careerClub(),box.innerText);showExtra('resultsScreen')}
+function openSave(){showExtra('saveScreen');document.getElementById('saveBody').textContent='Save your career progress, transfers, squad, tactics, fixtures and league results.'}
+function saveCareerNow(){squadSave();saveMatches();localStorage.setItem('touchlineLastSave_'+careerClub(),new Date().toISOString());document.getElementById('saveBody').textContent='CAREER SAVED SUCCESSFULLY';}
+const previousExtraDashboardAction=dashboardAction;
+dashboardAction=function(name){if(name==='Transfers'){openTransfers();return}if(name==='Finances'){openFinances();return}if(name==='Next Match'){squadLoad();tacticsLoad();openNextMatch();return}if(name==='Save Game'){openSave();return}previousExtraDashboardAction(name)};
+</script>
+<style>
+#seasonScreen{display:none;background:#06152a}
+.season-highlight{color:#ffe078;font-weight:900}
+</style>
+<section id="seasonScreen" class="screen"><div class="ex-art"><div class="ex-heading">SEASON REVIEW</div><div class="ex-body ex-center" id="seasonBody"></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button class="primary" onclick="advanceSeason()">START NEXT SEASON</button></div></div></section>
+<script>
+// Multi-season career: preserve existing 2026/27 data and all current screens.
+const careerDivisionNames=['Regional Division','National Division','Championship Division','Premier Division'];
+const divisionOpponents=[
+ ['Westbridge United','Redmoor Athletic','Ironvale FC','Brookfield Town','Seabourne FC','Oakchester United','Kingsford Town','Ashbourne Rovers','Northwick Albion','Eastport City','Ravenshill FC','Ledgemont Athletic'],
+ ['Briarford FC','Halewick United','Moorbridge Town','Creston Athletic','Winton Rovers','Dunmere City','Stonemill FC','Portleigh United','Bellchester FC','Marshfield Town','Highbury Vale','Calder Athletic'],
+ ['Northgate United','Southport City','Harbour Athletic','Oldcastle FC','Millbrook United','Crownford Town','Westmere City','Ridgeway Rovers','Kingsbridge FC','Waverley Athletic','Eastfield United','Whitehall FC'],
+ ['Capital City FC','Royal Borough','Grandchester United','Atlantic City','Highland Rovers','Central Athletic','North Coast FC','Southvale United','Imperial Town','Riverside City','Metropolitan FC','Union Albion']
+];
+function careerSeasonKey(){return 'touchlineSeason_'+careerClub()}
+function careerSeason(){let x;try{x=JSON.parse(localStorage.getItem(careerSeasonKey())||'null')}catch(e){}return x&&Number.isInteger(x.number)&&x.number>=1&&Number.isInteger(x.division)?x:{number:1,division:0,history:[],clubs:null}}
+function seasonLabel(){const n=2025+careerSeason().number;return n+'/'+String((n+1)%100).padStart(2,'0')}
+function seasonDivision(){return careerDivisionNames[Math.max(0,Math.min(3,careerSeason().division))]}
+function seasonTeams(){const st=careerSeason();if(st.number===1)return;const list=Array.isArray(st.clubs)&&st.clubs.length===12?st.clubs:null;if(list&&teams.some((x,i)=>x!==list[i]))teams.splice(0,teams.length,...list)}
+seasonTeams();
+const oldMatchStorageKey=matchStorageKey;
+matchStorageKey=function(){const st=careerSeason();return st.number===1?oldMatchStorageKey():'touchlineMatches_'+careerClub()+'_season'+st.number};
+const oldMarketKey=marketKey;
+marketKey=function(){return oldMarketKey()+'_season'+careerSeason().number};
+const oldShowFootballScreen=showFootballScreen;
+showFootballScreen=function(id){oldShowFootballScreen(id);document.getElementById('seasonScreen').style.display=id==='seasonScreen'?'flex':'none'};
+const oldShowExtra=showExtra;
+showExtra=function(id){oldShowExtra(id);document.getElementById('seasonScreen').style.display='none'};
+const oldOpenDashboardSeason=openDashboard;
+openDashboard=function(){document.getElementById('seasonScreen').style.display='none';oldOpenDashboardSeason();updateDashboardLive()};
+const oldDashboardLiveSeason=updateDashboardLive;
+updateDashboardLive=function(){oldDashboardLiveSeason();const el=document.getElementById('dashboardLive');if(el)el.textContent=el.textContent.replace(/SEASON: \d{4}\/\d{2}/,'SEASON: '+seasonLabel()+' | '+seasonDivision())};
+const oldRenderLeagueSeason=renderLeague;
+renderLeague=function(){oldRenderLeagueSeason();const label=document.querySelector('#leagueScreen .fl-subtitle');if(label)label.textContent='SEASON '+seasonLabel()+' · '+seasonDivision().toUpperCase()+' · 12 CLUBS'};
+function finalSeasonTable(){loadMatches();const stats=teams.map((name,id)=>({name,id,p:0,gd:0,gf:0,pts:0}));for(const week of leagueMatches)for(const m of week){if(!Number.isInteger(m.homeGoals)||!Number.isInteger(m.awayGoals))continue;const h=stats[m.home],a=stats[m.away];h.p++;a.p++;h.gf+=m.homeGoals;a.gf+=m.awayGoals;h.gd+=m.homeGoals-m.awayGoals;a.gd+=m.awayGoals-m.homeGoals;if(m.homeGoals>m.awayGoals)h.pts+=3;else if(m.homeGoals<m.awayGoals)a.pts+=3;else{h.pts++;a.pts++}}return stats.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||a.name.localeCompare(b.name))}
+function openSeasonReview(){const table=finalSeasonTable(),rank=table.findIndex(t=>t.name===careerClub())+1,st=careerSeason(),box=document.getElementById('seasonBody');let outcome='REMAINING IN '+seasonDivision().toUpperCase();if(rank<=2&&st.division<3)outcome='PROMOTED TO '+careerDivisionNames[st.division+1].toUpperCase()+'!';else if(rank>=11&&st.division>0)outcome='RELEGATED TO '+careerDivisionNames[st.division-1].toUpperCase();else if(rank===1&&st.division===3)outcome='PREMIER DIVISION CHAMPIONS!';box.replaceChildren();['SEASON '+seasonLabel(),seasonDivision(),'FINAL POSITION: '+rank+' OF 12','POINTS: '+table[rank-1].pts,outcome,'Your squad and finances carry forward.','The next season has 22 fresh fixtures.'].forEach((line,i)=>{const d=document.createElement('div');d.textContent=line;if(i===4)d.className='season-highlight';box.appendChild(d)});showFootballScreen('seasonScreen')}
+const oldOpenNextMatchSeason=openNextMatch;
+openNextMatch=function(){if(currentWeek()<0){openSeasonReview();return}oldOpenNextMatchSeason();const box=document.getElementById('nextMatchBody');if(box){const label=document.createElement('div');label.textContent=seasonLabel()+' · '+seasonDivision();box.prepend(label)}};
+function advanceSeason(){if(currentWeek()>=0){alert('Finish the current season first.');return}const st=careerSeason(),table=finalSeasonTable(),rank=table.findIndex(t=>t.name===careerClub())+1;if(rank<1)return;const newDivision=Math.max(0,Math.min(3,st.division+(rank<=2?1:rank>=11?-1:0)));const history=Array.isArray(st.history)?st.history:[];history.push({season:seasonLabel(),division:st.division,position:rank,points:table[rank-1].pts});const club=careerClub(),pool=divisionOpponents[newDivision].filter(x=>x!==club);const rotated=pool.slice((st.number*3)%pool.length).concat(pool.slice(0,(st.number*3)%pool.length));const nextClubs=[club,...rotated.slice(0,11)];const next={number:st.number+1,division:newDivision,history,clubs:nextClubs};localStorage.setItem(careerSeasonKey(),JSON.stringify(next));teams.splice(0,teams.length,...nextClubs);leagueMatches=JSON.parse(JSON.stringify(makeSchedule()));saveMatches();fixtureWeek=0;const f=financeData();const award=rank===1?25000:rank===2?15000:5000;f.balance+=award;f.budget+=award;storeFinance(f);squadLoad();squadSave();openDashboard();/* Season report handles the welcome message. */}
+const oldContinueCareerSeason=continueCareer;
+continueCareer=function(){seasonTeams();oldContinueCareerSeason()};
+const oldStartCareerSeason=startCareer;
+startCareer=function(){const previous=careerClub();oldStartCareerSeason();if(careerClub()!==previous)seasonTeams()};
+</script>
+<style>
+#contractsScreen{display:none;background:#06152a}
+.contract-row{display:grid;grid-template-columns:1.8fr .5fr .5fr .55fr .85fr 1fr 1fr;align-items:center;gap:1%;padding:1% 1.5%;background:#20519a;margin-bottom:.5%;border-radius:7px;font-size:1.18cqw}
+.contract-row:nth-child(even){background:#143a78}.contract-row button{font-size:1.05cqw;border:1px solid #ffce42;border-radius:8px;background:#0a6639;color:white;padding:5%;font-weight:bold}
+.sq-row.unavailable{background:#6c3046;color:#fff}.sq-marker.unavailable{border-color:#ff7777;background:#79314a}
+</style>
+<section id="contractsScreen" class="screen"><div class="ex-art"><div class="ex-heading">PLAYER CONTRACTS</div><div class="ex-body"><div class="ex-note" id="contractSummary"></div><div class="contract-row"><b>PLAYER</b><b>AGE</b><b>POS</b><b>RTG</b><b>WAGE/WK</b><b>CONTRACT</b><b>NEGOTIATE</b></div><div id="contractRows"></div></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button onclick="openFinances()">FINANCES</button></div></div></section>
+<script>
+// Career systems are additive: old squad saves are upgraded in place.
+function tlDivision(){return typeof careerSeason==='function'?Math.max(0,Math.min(3,careerSeason().division)):0}
+function tlSeason(){return typeof careerSeason==='function'?careerSeason().number:1}
+function tlRand(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+function tlWage(r,d){const base=[95,360,1600,8500][d],factor=Math.pow(1.13,Math.max(0,r-[65,70,77,83][d]));return Math.round(base*factor/25)*25}
+function tlInit(p){if(!p)return p;if(!Number.isFinite(p.wage))p.wage=tlWage(p.rating,Math.min(tlDivision(),1));if(!Number.isInteger(p.contractUntil))p.contractUntil=tlSeason()+tlRand(1,3);if(!Number.isInteger(p.injury))p.injury=0;if(!Number.isInteger(p.ban))p.ban=0;if(!Number.isInteger(p.yellows))p.yellows=0;return p}
+const tlOldSquadLoad=squadLoad;
+squadLoad=function(){tlOldSquadLoad();squadPlayers.forEach(tlInit)};
+const tlOldSquadSave=squadSave;
+squadSave=function(){squadPlayers.forEach(tlInit);tlOldSquadSave()};
+function tlAvailable(p){return p&&!(p.injury>0||p.ban>0)}
+function tlStatus(p){return p.injury>0?'INJ '+p.injury:p.ban>0?'SUS '+p.ban:p.yellows>0?'YC '+p.yellows:'FIT'}
+const tlOldSquadRender=squadRender;
+squadRender=function(){tlOldSquadRender();for(const [i,row] of [...document.querySelectorAll('#squadXI .sq-row,#squadSubs .sq-row,#squadReserves .sq-row')].entries()){const p=squadPlayers[i];if(!p)continue;row.title=tlStatus(p)+' · '+pounds(p.wage)+'/week · contract until season '+p.contractUntil;if(!tlAvailable(p)){row.classList.add('unavailable');const name=row.children[1];if(name)name.textContent=p.name+' ['+tlStatus(p)+']'}}for(const [i,marker] of [...document.querySelectorAll('#squadPitch .sq-marker')].entries()){if(!tlAvailable(squadPlayers[i]))marker.classList.add('unavailable')}};
+const tlOldAuto=squadAutoSelect;
+squadAutoSelect=function(){const fit=squadPlayers.filter(tlAvailable);if(fit.length<11||!fit.some(p=>p.pos==='GK')){squadStatus.textContent='Not enough available players to field a team';return}const unavailable=squadPlayers.filter(p=>!tlAvailable(p));squadPlayers=fit;tlOldAuto();squadPlayers.push(...unavailable);squadRender()};
+const tlOldConfirm=squadConfirm;
+squadConfirm=function(){if(squadPlayers.slice(0,11).some(p=>!tlAvailable(p))){squadStatus.textContent='Replace injured or suspended players before confirming';squadRender();return}tlOldConfirm()};
+const tlOldMarket=freshMarket;
+freshMarket=function(id){const a=tlOldMarket(id),d=tlDivision(),ranges=[[60,77],[68,83],[75,91],[82,99]],lo=ranges[d][0],hi=ranges[d][1];return a.map((p,i)=>({...p,id:p.id+tlSeason()*10000+d*100000,rating:Math.min(99,lo+(i*7+tlSeason()*3)% (hi-lo+1)),wage:undefined,contractUntil:undefined}))};
+// Balance positions and ratings independently: no position is always strongest.
+// Use a deterministic shuffle so reopening the market does not reroll players.
+const tlBalancedMarket=freshMarket;
+freshMarket=function(windowId){
+ const pool=tlBalancedMarket(windowId), d=tlDivision();
+ const bounds=[[60,77],[68,83],[75,91],[82,99]][d];
+ const positions=['GK','DR','DC','DC','DL','MC','MC','ML','MR','AMC','ST','ST','MR','DC'];
+ const seedText=careerClub()+'|'+tlSeason()+'|'+windowId+'|'+d;
+ let seed=2166136261;
+ for(let i=0;i<seedText.length;i++)seed=Math.imul(seed^seedText.charCodeAt(i),16777619)>>>0;
+ const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+ // Spread ratings evenly across the division range, then independently shuffle.
+ const ratings=shuffle(pool.map((_,i)=>Math.round(bounds[0]+(bounds[1]-bounds[0])*i/(pool.length-1))));
+ const roles=shuffle([...positions]);
+ return pool.map((p,i)=>({...p,pos:roles[i],rating:ratings[i]}));
+};
+// Existing cached markets are migrated to division-appropriate ratings on first viewing.
+const tlOldMarketKey=marketKey;
+marketKey=function(){return tlOldMarketKey()+'_division'+tlDivision()+'_balanced2'};
+const tlPreviousMarketPlayers=marketPlayers;
+marketPlayers=function(){
+ const key=marketKey();
+ let cached=null;try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
+ if(Array.isArray(cached))return cached;
+ // Preserve purchases made in the previous market: don't list signed players again.
+ const oldKey=tlOldMarketKey()+'_division'+tlDivision();
+ let old=null;try{old=JSON.parse(localStorage.getItem(oldKey)||'null')}catch(e){}
+ const bought=new Set(squadPlayers.map(p=>p.id));
+ const pool=freshMarket(transferWindow().id).filter(p=>!bought.has(p.id)&&(!Array.isArray(old)||old.some(x=>x.id===p.id)));
+ localStorage.setItem(key,JSON.stringify(pool));
+ return pool;
+};
+const tlOldPrice=playerPrice;
+playerPrice=function(p){const d=tlDivision();return Math.max(1000,Math.round((tlOldPrice(p)*[1,3,10,35][d])/500)*500)};
+const tlOldTransfer=doTransfer;
+doTransfer=function(p){if(transferTab==='buy'){const projected=tlWage(p.rating,tlDivision());const budget=tlWageBudget();const total=tlWeeklyWages();if(total+projected>budget){alert('Signing exceeds wage budget. Available: '+pounds(Math.max(0,budget-total))+'/week. Player requests '+pounds(projected)+'/week.');return}p.wage=projected;p.contractUntil=tlSeason()+tlRand(2,3);p.injury=0;p.ban=0;p.yellows=0}tlOldTransfer(p)};
+function tlWeeklyWages(){return squadPlayers.reduce((n,p)=>n+(tlInit(p).wage||0),0)}
+function tlWageBudget(){return [18000,55000,220000,1700000][tlDivision()]}
+function tlFinKey(){return 'touchlinePayroll_'+careerClub()+'_season'+tlSeason()}
+const tlOldFinances=openFinances;
+openFinances=function(){squadLoad();tlOldFinances();const f=financeData(),body=document.getElementById('financeBody'),used=tlWeeklyWages();const info=document.createElement('div');info.innerHTML='<div class="ex-metric">WEEKLY WAGES: '+pounds(used)+'</div><div class="ex-metric">WAGE BUDGET: '+pounds(tlWageBudget())+'</div><div class="ex-metric">WAGES PAID THIS SEASON: '+pounds(Number(localStorage.getItem(tlFinKey()))||0)+'</div>';body.appendChild(info);const b=document.createElement('button');b.className='ex-button primary';b.textContent='MANAGE CONTRACTS';b.onclick=openContracts;body.appendChild(b)};
+function openContracts(){squadLoad();showExtra('contractsScreen');document.getElementById('contractsScreen').style.display='flex';renderContracts()}
+function renderContracts(){const host=document.getElementById('contractRows');host.replaceChildren();document.getElementById('contractSummary').textContent='WAGES '+pounds(tlWeeklyWages())+' / '+pounds(tlWageBudget())+' PER WEEK · SEASON '+tlSeason();squadPlayers.forEach(p=>{const row=document.createElement('div');row.className='contract-row';[p.name,p.age,p.pos,p.rating,pounds(p.wage),p.contractUntil===tlSeason()?'EXPIRES THIS SEASON':(p.contractUntil-tlSeason())+' SEASONS'].forEach(x=>{const span=document.createElement('span');span.textContent=x;row.appendChild(span)});const b=document.createElement('button');b.textContent='RENEW';b.onclick=()=>tlNegotiate(p);row.appendChild(b);host.appendChild(row)})}
+function tlNegotiate(p){const minimum=tlWage(p.rating,tlDivision()),request=Math.max(minimum,Math.round(p.wage*1.12/25)*25),input=prompt(p.name+' requests '+pounds(request)+'/week. Enter your weekly wage offer (£):',String(request));if(input===null)return;const offer=Math.round(Number(input));if(!Number.isFinite(offer)||offer<=0){alert('Enter a valid weekly wage.');return}const available=tlWageBudget()-tlWeeklyWages()+p.wage;if(offer>available){alert('This offer exceeds your wage budget.');return}const threshold=Math.max(minimum,request);if(offer<threshold){alert(p.name+' rejected the offer and countered at '+pounds(threshold)+'/week.');return}if(!confirm(p.name+' accepts '+pounds(offer)+'/week for 2 seasons. Confirm contract?'))return;p.wage=offer;p.contractUntil=tlSeason()+2;squadSave();renderContracts()}
+const tlOldShowExtra=showExtra;
+showExtra=function(id){document.getElementById('contractsScreen').style.display='none';tlOldShowExtra(id)};
+const tlOldDashboard=openDashboard;
+openDashboard=function(){document.getElementById('contractsScreen').style.display='none';tlOldDashboard()};
+function tlPostMatch(){squadLoad();const notices=[];for(const p of squadPlayers){if(p.injury>0){p.injury--;if(!p.injury)notices.push(p.name+' has recovered')}if(p.ban>0){p.ban--;if(!p.ban)notices.push(p.name+' is available after suspension')}}const eligible=squadPlayers.slice(0,11).filter(tlAvailable);if(eligible.length&&Math.random()<.12){const injuryPool=eligible.filter(p=>p.pos!=='GK'||squadPlayers.filter(g=>g.pos==='GK').length>1);if(injuryPool.length){const p=injuryPool[tlRand(0,injuryPool.length-1)];p.injury=tlRand(1,5);notices.push(p.name+' injured — '+p.injury+' match(es) out')}}for(const p of eligible){if(Math.random()<.09){p.yellows++;if(p.yellows>=5){p.yellows=0;p.ban=1;notices.push(p.name+' suspended for 1 match (5 yellows)')}}if(Math.random()<.006){p.ban=Math.max(p.ban,3);notices.push(p.name+' sent off — 3-match ban')}}squadSave();return notices}
+const tlOldPlay=playInstantMatch;
+playInstantMatch=function(){const before=currentWeek();if(before<0)return;squadLoad();const unavailable=squadPlayers.slice(0,11).filter(p=>!tlAvailable(p));if(unavailable.length){alert('Unavailable starting players: '+unavailable.map(p=>p.name).join(', ')+'. Use Squad Management and Auto Select before playing.');return}tlOldPlay();if(currentWeek()===before)return;const f=financeData(),pay=tlWeeklyWages();f.balance-=pay;storeFinance(f);localStorage.setItem(tlFinKey(),String((Number(localStorage.getItem(tlFinKey()))||0)+pay));const notices=tlPostMatch(),box=document.getElementById('resultsBody');const d=document.createElement('div');d.style.fontSize='1.3cqw';d.style.color='#ffdf70';d.textContent='Wages: -'+pounds(pay)+(notices.length?' · '+notices.join(' · '):' · No new injuries or suspensions');box.appendChild(d)};
+const tlOldAdvance=advanceSeason;
+advanceSeason=function(){const previous=tlSeason();if(currentWeek()>=0)return;tlOldAdvance();if(tlSeason()===previous)return;squadLoad();const departing=squadPlayers.filter(p=>p.contractUntil<tlSeason());if(departing.length){squadPlayers=squadPlayers.filter(p=>p.contractUntil>=tlSeason());for(const p of departing){const replacement={id:Date.now()+Math.random(),name:'Academy '+p.pos,pos:p.pos,age:18,rating:Math.max(55,65+tlDivision()*5),wage:tlWage(65+tlDivision()*5,tlDivision()),contractUntil:tlSeason()+2,injury:0,ban:0,yellows:0};squadPlayers.push(replacement)}/* Departures are shown in the full season report. */}squadPlayers.forEach(p=>{p.yellows=0;p.injury=0;p.ban=0});squadSave()};
+</script>
+
+<style>
+#playerStatsScreen{display:none;background:#06152a}
+.ps-grid{display:grid;grid-template-columns:2.1fr .5fr .6fr .6fr .65fr .65fr .65fr .65fr;align-items:center;gap:.5%;padding:.65% 1%;font-size:1.15cqw;background:#20519a;border-radius:6px;margin-bottom:.35%}
+.ps-grid:nth-child(even){background:#143a78}.ps-head{color:#ffe078;font-weight:900}
+</style>
+<section id="playerStatsScreen" class="screen"><div class="ex-art"><div class="ex-heading">PLAYER STATISTICS</div><div class="ex-body"><div class="ex-note" id="playerStatsSummary"></div><div class="ps-grid ps-head"><span>PLAYER</span><span>POS</span><span>AGE</span><span>RTG</span><span>APP</span><span>GOALS</span><span>CAREER APP</span><span>CAREER G</span></div><div id="playerStatsRows"></div></div><div class="ex-footer"><button onclick="openSquad()">BACK TO SQUAD</button><button class="primary" onclick="openDashboard()">DASHBOARD</button></div></div></section>
+<script>
+// Per-player stats are stored with the existing squad; legacy careers start at zero.
+function tlStatsInit(p){
+ if(!p)return p;
+ for(const key of ['seasonApps','seasonGoals','careerApps','careerGoals'])if(!Number.isInteger(p[key])||p[key]<0)p[key]=0;
+ return p;
+}
+const tlStatsOldLoad=squadLoad;
+squadLoad=function(){tlStatsOldLoad();squadPlayers.forEach(tlStatsInit)};
+const tlStatsOldSave=squadSave;
+squadSave=function(){squadPlayers.forEach(tlStatsInit);tlStatsOldSave()};
+// Select the best available starting XI using the established formation logic,
+// then put the seven strongest remaining fit players on the bench.
+const tlStatsOldAuto=squadAutoSelect;
+squadAutoSelect=function(){
+ tlStatsOldAuto();
+ const xi=squadPlayers.slice(0,11),rest=squadPlayers.slice(11);
+ rest.sort((a,b)=>Number(tlAvailable(b))-Number(tlAvailable(a))||b.rating-a.rating||a.age-b.age);
+ squadPlayers=[...xi,...rest];
+ squadStatus.textContent='Strongest available XI and seven strongest substitutes selected — confirm to save';
+ squadRender();
+};
+const statsButton=document.createElement('button');
+statsButton.type='button';statsButton.textContent='PLAYER STATS';statsButton.onclick=openPlayerStats;
+document.querySelector('.sq-footer').insertBefore(statsButton,document.querySelector('.sq-footer button:last-child'));
+function openPlayerStats(){
+ squadLoad();
+ for(const el of document.querySelectorAll('.screen'))el.style.display='none';
+ document.getElementById('playerStatsScreen').style.display='flex';
+ document.getElementById('playerStatsSummary').textContent=seasonLabel()+' · '+seasonDivision()+' · Appearances count players who actually start a match';
+ const host=document.getElementById('playerStatsRows');host.replaceChildren();
+ const players=[...squadPlayers].sort((a,b)=>b.seasonGoals-a.seasonGoals||b.seasonApps-a.seasonApps||b.rating-a.rating);
+ players.forEach(p=>{const row=document.createElement('div');row.className='ps-grid';[p.name,p.pos,p.age,p.rating,p.seasonApps,p.seasonGoals,p.careerApps,p.careerGoals].forEach(v=>{const span=document.createElement('span');span.textContent=v;row.appendChild(span)});host.appendChild(row)});
+}
+const tlStatsOldRender=squadRender;
+squadRender=function(){tlStatsOldRender();for(const [i,row] of [...document.querySelectorAll('#squadXI .sq-row,#squadSubs .sq-row,#squadReserves .sq-row')].entries()){const p=tlStatsInit(squadPlayers[i]);if(p)row.title+=' · Season: '+p.seasonApps+' apps, '+p.seasonGoals+' goals · Career: '+p.careerApps+' apps, '+p.careerGoals+' goals'}};
+// Credit goals using the scorers produced by the existing Instant Match result.
+// Only starters receive an appearance; no substitute is credited without a substitution system.
+const tlStatsOldPlay=playInstantMatch;
+playInstantMatch=function(){
+ const week=currentWeek();if(week<0)return;
+ squadLoad();const starters=squadPlayers.slice(0,11).map(p=>p.id);
+ tlStatsOldPlay();
+ if(currentWeek()===week)return;
+ squadLoad();
+ const ids=new Set(starters);
+ squadPlayers.forEach(p=>{tlStatsInit(p);if(ids.has(p.id)){p.seasonApps++;p.careerApps++}});
+ const lines=[...document.getElementById('resultsBody').children].map(x=>x.textContent);
+ const line=lines.find(x=>x.startsWith('Your goalscorers: '));
+ if(line){
+  const names=line.slice('Your goalscorers: '.length);
+  if(names!=='None')for(const name of names.split(', ')){
+   const p=squadPlayers.find(x=>ids.has(x.id)&&x.name===name);
+   if(p){p.seasonGoals++;p.careerGoals++}
+  }
+ }
+ squadSave();
+};
+// Apply one age/ability adjustment at each season rollover; keep career totals.
+const tlStatsOldAdvance=advanceSeason;
+advanceSeason=function(){
+ const prior=careerSeason().number;
+ tlStatsOldAdvance();
+ if(careerSeason().number===prior)return;
+ squadLoad();
+ const changes=[];
+ for(const p of squadPlayers){
+  tlStatsInit(p);
+  const old=p.rating;
+  // Age at the beginning of the new season controls the development curve.
+  let delta=0;
+  if(p.age<=21)delta=1+Math.floor(Math.random()*3);
+  else if(p.age<=24)delta=Math.floor(Math.random()*3);
+  else if(p.age<=28)delta=Math.floor(Math.random()*3)-1;
+  else if(p.age<=31)delta=Math.floor(Math.random()*3)-2;
+  else delta=-1-Math.floor(Math.random()*3);
+  p.rating=Math.max(40,Math.min(99,p.rating+delta));
+  p.age++;
+  p.seasonApps=0;p.seasonGoals=0;
+  if(p.rating!==old)changes.push(p.name+' '+old+'→'+p.rating);
+ }
+ squadSave();
+ /* Rating changes are shown in the full season report. */
+};
+const tlStatsOldDashboard=openDashboard;
+openDashboard=function(){document.getElementById('playerStatsScreen').style.display='none';tlStatsOldDashboard()};
+</script>
+
+<style>
+/* Full season report replaces the old small, centred summary. */
+#seasonScreen .season-report-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;container-type:inline-size;overflow:hidden;color:#fff;background:linear-gradient(110deg,#07172acb,#071b3de5),url('assets/manager-dashboard.png') center/100% 100% no-repeat}
+#seasonScreen .season-report-title{position:absolute;left:15%;top:2%;width:70%;height:11%;white-space:nowrap;border:3px solid #ffce42;border-radius:50px;background:linear-gradient(#236bd0,#061d50);display:grid;place-items:center;font-size:2.55cqw;font-weight:900;text-shadow:2px 2px #00152d}
+#seasonScreen .season-report-body{position:absolute;left:4%;right:4%;top:15%;bottom:14%;overflow-y:auto;overscroll-behavior:contain;padding:1.4%;border:2px solid #ffce42;border-radius:14px;background:#071c48f5;font-size:1.2cqw}
+#seasonScreen .sr-hero{text-align:center;font-size:2.2cqw;font-weight:900;color:#ffe078;margin:.2% 0 1.2%}
+#seasonScreen .sr-sub{text-align:center;color:#d7e8ff;font-size:1.2cqw;margin-bottom:1.2%}
+#seasonScreen .sr-metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:.7%;margin-bottom:1.5%}
+#seasonScreen .sr-metric{background:#1b4d91;border:1px solid #6689c5;border-radius:8px;text-align:center;padding:4% 1%;font-size:1.45cqw;font-weight:900}
+#seasonScreen .sr-metric small{display:block;color:#ffdc73;font-size:.95cqw;margin-bottom:4%}
+#seasonScreen .sr-columns{display:grid;grid-template-columns:1fr 1fr;gap:1.2%}
+#seasonScreen .sr-card{border:1px solid #507fbc;border-radius:10px;background:#113567;padding:2%;margin-bottom:1.3%}
+#seasonScreen .sr-card h3{color:#ffdc73;margin:0 0 1.2%;font-size:1.45cqw}
+#seasonScreen .sr-line{display:flex;justify-content:space-between;gap:1%;border-bottom:1px solid #ffffff20;padding:1.1% .5%;font-size:1.15cqw}
+#seasonScreen .sr-line span:last-child{text-align:right;font-weight:bold}
+#seasonScreen .sr-up{color:#79efa3}#seasonScreen .sr-down{color:#ff9b9b}
+#seasonScreen .sr-empty{color:#b9cee8;font-style:italic;padding:1% 0}
+#seasonScreen .season-report-footer{position:absolute;left:12%;right:12%;bottom:2%;height:9%;display:flex;gap:2%}
+#seasonScreen .season-report-footer button{flex:1;border:2px solid #ffce42;border-radius:14px;background:linear-gradient(#2670d0,#07265f);color:white;font-size:1.8cqw;font-weight:900;cursor:pointer}
+#seasonScreen .season-report-footer button.primary{background:linear-gradient(#20b744,#006021)}
+</style>
+<script>
+// Snapshot the completed season BEFORE the existing rollover, then display
+// actual departures and development AFTER it. This preserves old career saves.
+let tlReportSnapshot=null;
+let tlReportCompleted=false;
+function tlReportNode(tag,cls,content){const n=document.createElement(tag);if(cls)n.className=cls;if(content!==undefined)n.textContent=String(content);return n}
+function tlReportCard(parent,title,rows,empty){const c=tlReportNode('div','sr-card'),h=tlReportNode('h3','',title);c.appendChild(h);if(!rows.length)c.appendChild(tlReportNode('div','sr-empty',empty||'None'));for(const row of rows){const line=tlReportNode('div','sr-line'),left=tlReportNode('span','',row[0]),right=tlReportNode('span',row[2]||'',row[1]);line.append(left,right);c.appendChild(line)}parent.appendChild(c)}
+function tlReportSnapshotNow(){
+ const table=finalSeasonTable(),rank=table.findIndex(x=>x.name===careerClub())+1;
+ if(rank<1)return null;
+ squadLoad();
+ const st=careerSeason(),players=squadPlayers.map(p=>({...p}));
+ let wins=0,draws=0,losses=0;
+ for(const week of leagueMatches)for(const m of week){
+  if(!Number.isInteger(m.homeGoals)||!Number.isInteger(m.awayGoals))continue;
+  const home=teams[m.home]===careerClub(),away=teams[m.away]===careerClub();if(!home&&!away)continue;
+  const gf=home?m.homeGoals:m.awayGoals,ga=home?m.awayGoals:m.homeGoals;
+  if(gf>ga)wins++;else if(gf===ga)draws++;else losses++;
+ }
+ const outcome=rank===1&&st.division===3?'PREMIER DIVISION CHAMPIONS!':rank<=2&&st.division<3?'PROMOTED TO '+careerDivisionNames[st.division+1].toUpperCase()+'!':rank>=11&&st.division>0?'RELEGATED TO '+careerDivisionNames[st.division-1].toUpperCase():'REMAINING IN '+seasonDivision().toUpperCase();
+ return {season:seasonLabel(),division:seasonDivision(),rank,points:table[rank-1].pts,wins,draws,losses,outcome,players,finance:{...financeData()},nextNumber:st.number+1};
+}
+function tlRenderFullReport(after){
+ const r=tlReportSnapshot;if(!r)return;
+ const root=document.getElementById('seasonScreen');
+ root.replaceChildren();
+ const art=tlReportNode('div','season-report-art');
+ art.appendChild(tlReportNode('div','season-report-title',after?'SEASON COMPLETE · DEVELOPMENT':'END OF SEASON REVIEW'));
+ const body=tlReportNode('div','season-report-body');
+ body.appendChild(tlReportNode('div','sr-hero',r.outcome));
+ body.appendChild(tlReportNode('div','sr-sub',r.season+' · '+r.division+' · '+careerClub()));
+ const metrics=tlReportNode('div','sr-metrics');
+ for(const [label,value] of [['POSITION',r.rank+' / 12'],['POINTS',r.points],['PLAYED',22],['WON',r.wins],['DRAWN',r.draws],['LOST',r.losses]]){const m=tlReportNode('div','sr-metric');m.append(tlReportNode('small','',label),document.createTextNode(String(value)));metrics.appendChild(m)}
+ body.appendChild(metrics);
+ const cols=tlReportNode('div','sr-columns'),left=tlReportNode('div',''),right=tlReportNode('div','');
+ const scorers=[...r.players].filter(p=>p.seasonGoals>0).sort((a,b)=>b.seasonGoals-a.seasonGoals).slice(0,5);
+ tlReportCard(left,'SEASON AWARDS',[
+  ...([...r.players].sort((a,b)=>(b.seasonGoals||0)-(a.seasonGoals||0))[0]?.seasonGoals>0?[[scorers[0].name,'Top scorer · '+scorers[0].seasonGoals+' goals']]:[]),
+  ...([...r.players].sort((a,b)=>(b.seasonApps||0)-(a.seasonApps||0))[0]?.seasonApps>0?[[[...r.players].sort((a,b)=>(b.seasonApps||0)-(a.seasonApps||0))[0].name,'Most appearances · '+Math.max(...r.players.map(p=>p.seasonApps||0))]]:[]),
+  ...scorers.slice(0,4).map(p=>[p.name,(p.seasonGoals||0)+' goals · '+(p.seasonApps||0)+' apps'])
+ ],'No player statistics recorded this season');
+ const now=after?squadPlayers:[];
+ const oldById=new Map(r.players.map(p=>[String(p.id),p]));
+ const changes=after?now.filter(p=>oldById.has(String(p.id))).map(p=>({p,old:oldById.get(String(p.id)).rating,delta:p.rating-oldById.get(String(p.id)).rating})).sort((a,b)=>b.delta-a.delta||a.p.name.localeCompare(b.p.name)):[];
+ tlReportCard(left,'PLAYER DEVELOPMENT',after?changes.map(x=>[x.p.name+' · '+x.p.pos,x.old+' → '+x.p.rating+' ('+(x.delta>0?'+':'')+x.delta+')',x.delta>0?'sr-up':x.delta<0?'sr-down':'']):[['Pending','Rating changes calculated when you start next season']],'No rating changes');
+ const expired=r.players.filter(p=>Number.isInteger(p.contractUntil)&&p.contractUntil<r.nextNumber);
+ tlReportCard(right,'PLAYERS LEAVING · CONTRACT EXPIRED',expired.map(p=>[p.name+' · '+p.pos+' · '+p.rating,pounds(p.wage||0)+'/wk saved']), 'No contracts expire this summer');
+ const lastYear=r.players.filter(p=>Number.isInteger(p.contractUntil)&&p.contractUntil===r.nextNumber);
+ tlReportCard(right,'CONTRACTS TO REVIEW',lastYear.map(p=>[p.name+' · '+p.pos,'Expires next season · '+pounds(p.wage||0)+'/wk']),'No contracts entering their final season');
+ const prize=r.rank===1?25000:r.rank===2?15000:5000;
+ tlReportCard(right,'CLUB FINANCES',[
+  ['Season prize money',pounds(prize)],['Closing balance before prize',pounds(r.finance.balance)],
+  ['Next season balance',after?pounds(financeData().balance):pounds(r.finance.balance+prize)],
+  ['Transfer budget',after?pounds(financeData().budget):pounds(r.finance.budget+prize)],
+  ['Wages freed by departures',pounds(expired.reduce((sum,p)=>sum+(p.wage||0),0))+'/week']
+ ]);
+ if(after&&expired.length)tlReportCard(left,'ACADEMY REPLACEMENTS',now.filter(p=>!oldById.has(String(p.id))).map(p=>[p.name+' · '+p.pos,'Age '+p.age+' · Rating '+p.rating]),'None');
+ cols.append(left,right);body.appendChild(cols);art.appendChild(body);
+ const footer=tlReportNode('div','season-report-footer');
+ const back=tlReportNode('button','',after?'DASHBOARD':'BACK');back.onclick=()=>{tlReportCompleted=false;openDashboard()};
+ const next=tlReportNode('button','primary',after?'CONTINUE TO NEW SEASON':'START NEXT SEASON');
+ next.onclick=()=>{if(after){tlReportCompleted=false;openDashboard()}else advanceSeason()};
+ footer.append(back,next);art.appendChild(footer);root.appendChild(art);
+}
+const tlFullOldOpenReview=openSeasonReview;
+openSeasonReview=function(){tlReportCompleted=false;tlReportSnapshot=tlReportSnapshotNow();if(!tlReportSnapshot){tlFullOldOpenReview();return}tlRenderFullReport(false);showFootballScreen('seasonScreen')};
+const tlFullOldAdvance=advanceSeason;
+advanceSeason=function(){
+ if(currentWeek()>=0)return;
+ if(!tlReportSnapshot)tlReportSnapshot=tlReportSnapshotNow();
+ const before=careerSeason().number;
+ tlFullOldAdvance();
+ if(careerSeason().number===before)return;
+ squadLoad();tlReportCompleted=true;
+ tlRenderFullReport(true);
+ showFootballScreen('seasonScreen');
+};
+</script>
+
+<script>
+// Starting a NEW career resets all Touchline Legend career data, including
+// saves for a previously chosen club. Ordinary Safari refreshes retain saves.
+const tlFreshCareerStart=startCareer;
+const tlInitialClubs=[...divisionOpponents[0]];
+startCareer=function(){
+ const name=document.getElementById('managerName').value.trim();
+ if(!name||chosenClub<0){tlFreshCareerStart();return}
+ const saved=localStorage.getItem('touchlineCareer');
+ if(saved&&!confirm('Start a completely new career? This will erase your previous Touchline Legend career, including seasons, results, transfers, finances, player statistics and contracts.'))return;
+ const keys=[];
+ for(let i=0;i<localStorage.length;i++){
+  const k=localStorage.key(i);
+  if(k&&(k==='touchlineCareer'||k.startsWith('touchline')))keys.push(k);
+ }
+ for(const k of keys)localStorage.removeItem(k);
+ teams.splice(0,teams.length,...tlInitialClubs);
+ leagueMatches=JSON.parse(JSON.stringify(initialSchedule));
+ fixtureWeek=0;
+ squadFormationIndex=0;
+ squadSelected=-1;
+ squadPlayers=squadNames.map((p,i)=>({id:i,name:p[0],pos:p[1],age:p[2],rating:p[3]}));
+ tacticMentality='Balanced';tacticFlags=[false,false,false,false,false];
+ tlReportSnapshot=null;tlReportCompleted=false;
+ tlFreshCareerStart();
+};
+</script>
+
+<script>
+// Emergency goalkeeper protection: one registered goalkeeper must never block a match.
+// An existing career may already have an injured or suspended sole goalkeeper.
+const tlKeeperOriginalPlay=playInstantMatch;
+playInstantMatch=function(){
+ squadLoad();
+ const keepers=squadPlayers.filter(p=>p.pos==='GK');
+ if(keepers.length===1&&!tlAvailable(keepers[0])){
+  const keeper=keepers[0];
+  keeper.injury=0;keeper.ban=0;
+  squadSave();
+  alert('Emergency goalkeeper clearance: '+keeper.name+' is available to play because your club has no other goalkeeper.');
+ }
+ tlKeeperOriginalPlay();
+};
+</script>
+
+
+<style>
+#youthScreen{display:none;background:#06152a}
+.youth-row{display:grid;grid-template-columns:2fr .6fr .6fr .6fr 1fr;gap:1%;align-items:center;background:#20519a;padding:1% 1.4%;margin:.5% 0;border-radius:8px;font-size:1.25cqw}
+.youth-row:nth-child(even){background:#153b79}.youth-row.head{color:#ffda70;font-weight:900}
+.youth-row button{border:2px solid #ffce42;border-radius:9px;background:#086a35;color:#fff;font-size:1.15cqw;font-weight:bold;padding:4% 2%;cursor:pointer}
+</style>
+<section id="youthScreen" class="screen"><div class="ex-art"><div class="ex-heading">YOUTH ACADEMY</div><div class="ex-body"><div class="ex-note" id="youthSummary"></div><div class="youth-row head"><span>PLAYER</span><span>POS</span><span>AGE</span><span>RTG</span><span>ACTION</span></div><div id="youthRows"></div><p class="ex-note">Promoted players join your senior squad. Vacant academy places are filled with new youth players at the end of the season.</p></div><div class="ex-footer"><button onclick="openSquad()">BACK TO SQUAD</button><button class="primary" onclick="openDashboard()">DASHBOARD</button></div></div></section>
+<script>
+// Keep at least one registered goalkeeper; the existing emergency clearance
+// handles injuries/suspensions when there is only one.
+const tlYouthPreviousTransfer=doTransfer;
+doTransfer=function(p){
+ if(transferTab==='sell'&&p.pos==='GK'){
+  squadLoad();
+  if(squadPlayers.filter(x=>x.pos==='GK').length<=1){alert('You cannot sell your only goalkeeper. Sign or promote another goalkeeper first.');renderTransfers();return}
+ }
+ tlYouthPreviousTransfer(p);
+};
+const tlYouthFirst=['Jamie','Elliot','Harvey','Charlie','Alfie','Theo','Isaac','Ollie','Max','Finley','Reuben','Luca','Toby','Freddie','Riley','Noah','Archie','Leo'];
+const tlYouthLast=['Hughes','Taylor','Evans','Morris','Carter','Wilson','Davies','Foster','Reed','Brooks','Bennett','Walker','Cooper','Price','Hart','Stone'];
+const tlYouthPositions=['GK','DC','MC','ST','DR','DL','ML','MR','AMC','ST','DC','MC'];
+function tlYouthKey(){return 'touchlineYouth_'+careerClub()}
+function tlYouthFresh(index){
+ const seq=Number(localStorage.getItem('touchlineYouthCounter_'+careerClub())||0)+1;
+ localStorage.setItem('touchlineYouthCounter_'+careerClub(),String(seq));
+ return {id:'youth-'+careerClub()+'-'+seq,name:tlYouthFirst[(seq*7+index)%tlYouthFirst.length]+' '+tlYouthLast[(seq*3+index)%tlYouthLast.length],pos:tlYouthPositions[(seq+index)%tlYouthPositions.length],age:15+(seq+index)%4,rating:48+((seq*5+index*3)%17)};
+}
+function tlYouthLoad(){
+ let list;try{list=JSON.parse(localStorage.getItem(tlYouthKey())||'null')}catch(e){}
+ if(!Array.isArray(list)){list=Array.from({length:5},(_,i)=>tlYouthFresh(i));tlYouthSave(list)}
+ return list;
+}
+function tlYouthSave(list){localStorage.setItem(tlYouthKey(),JSON.stringify(list))}
+function openYouth(){
+ squadLoad();for(const el of document.querySelectorAll('.screen'))el.style.display='none';
+ document.getElementById('youthScreen').style.display='flex';tlYouthRender();
+}
+function tlYouthRender(){
+ const list=tlYouthLoad(),host=document.getElementById('youthRows');host.replaceChildren();
+ document.getElementById('youthSummary').textContent='ACADEMY: '+list.length+'/5 PLAYERS · FIRST TEAM: '+squadPlayers.length+'/25 · AGES 15–18';
+ if(!list.length){host.textContent='All academy players promoted. New prospects arrive at the end of the season.';return}
+ for(const p of list){
+  const row=document.createElement('div');row.className='youth-row';
+  for(const v of [p.name,p.pos,p.age,p.rating]){const s=document.createElement('span');s.textContent=v;row.appendChild(s)}
+  const b=document.createElement('button');b.textContent='PROMOTE';b.onclick=()=>tlYouthPromote(p.id);row.appendChild(b);host.appendChild(row);
+ }
+}
+function tlYouthPromote(id){
+ squadLoad();const list=tlYouthLoad(),p=list.find(x=>x.id===id);if(!p)return;
+ if(squadPlayers.length>=25){alert('Your senior squad is full (25 players). Sell a player before promoting a youngster.');return}
+ if(!confirm('Promote '+p.name+' ('+p.age+', '+p.pos+', rating '+p.rating+') to the first team?'))return;
+ const promoted={...p,wage:tlWage(p.rating,tlDivision()),contractUntil:tlSeason()+3,injury:0,ban:0,yellows:0,seasonApps:0,seasonGoals:0,careerApps:0,careerGoals:0};
+ squadPlayers.push(promoted);squadSave();tlYouthSave(list.filter(x=>x.id!==id));tlYouthRender();
+}
+const tlYouthButton=document.createElement('button');tlYouthButton.type='button';tlYouthButton.textContent='YOUTH ACADEMY';tlYouthButton.onclick=openYouth;
+document.querySelector('.sq-footer').insertBefore(tlYouthButton,document.querySelector('.sq-footer button:last-child'));
+const tlYouthOldDashboard=openDashboard;
+openDashboard=function(){document.getElementById('youthScreen').style.display='none';tlYouthOldDashboard()};
+const tlYouthOldAdvance=advanceSeason;
+advanceSeason=function(){
+ const before=careerSeason().number;
+ tlYouthOldAdvance();
+ if(careerSeason().number===before)return;
+ let youth=tlYouthLoad().map(p=>({...p,age:p.age+1,rating:Math.min(80,p.rating+1+Math.floor(Math.random()*3))})).filter(p=>p.age<=18);
+ while(youth.length<5)youth.push(tlYouthFresh(youth.length));
+ tlYouthSave(youth);
+};
+</script>
+
+
+<script>
+// Ratings-based match engine. The club's actual fit starting XI, tactical
+// approach, opponent division strength and home advantage affect each result.
+// Other clubs have persistent seeded strengths, so results aren't pure luck.
+function tlClubStrength(name){
+ const division=typeof tlDivision==='function'?tlDivision():0;
+ if(name===careerClub()){
+  squadLoad();
+  const xi=squadPlayers.slice(0,11);
+  if(!xi.length)return 65;
+  const slots=squadLayouts[squadFormationIndex];
+  const sum=xi.reduce((total,p,i)=>{
+   let value=p.rating||60;
+   if(typeof tlAvailable==='function'&&!tlAvailable(p))value-=18;
+   const slot=slots[i]&&slots[i].p;
+   if(slot&&p.pos!==slot){
+    if((p.pos==='GK')!==(slot==='GK'))value-=25;
+    else value-=5;
+   }
+   return total+value;
+  },0);
+  return sum/xi.length;
+ }
+ // Deterministic club strengths matched to player-rating bands in each division.
+ // Regional 63–73; National 70–80; Championship 77–87; Premier 84–94.
+ let hash=0;for(const char of name)hash=(hash*31+char.charCodeAt(0))>>>0;
+ const divisionRanges=[[63,73],[70,80],[77,87],[84,94]];
+ const [low,high]=divisionRanges[Math.max(0,Math.min(3,division))];
+ return low+(hash%(high-low+1));
+}
+function tlExpectedGoals(attack,defence,home,mentality){
+ const gap=attack-defence;
+ let expected=1.25+gap*.065+(home?.23:-.12);
+ if(mentality==='Attacking')expected+=.22;
+ if(mentality==='Defensive')expected-=.18;
+ return Math.max(.22,Math.min(3.65,expected));
+}
+function tlPoissonGoals(expected){
+ // Knuth's Poisson sampler: strong teams tend to score more, but upsets remain possible.
+ const threshold=Math.exp(-expected);let product=1,n=0;
+ do{n++;product*=Math.random()}while(product>threshold&&n<9);
+ return Math.min(7,n-1);
+}
+function tlSimulateFixture(match,week){
+ const home=teams[match.home],away=teams[match.away];
+ const hs=tlClubStrength(home),as=tlClubStrength(away);
+ const mine=careerClub();
+ const mental=typeof tacticMentality==='string'?tacticMentality:'Balanced';
+ const hm=home===mine?mental:'Balanced',am=away===mine?mental:'Balanced';
+ let h=tlExpectedGoals(hs,as,true,hm),a=tlExpectedGoals(as,hs,false,am);
+ if(home===mine||away===mine){
+  const active=typeof tacticFlags!=='undefined'?tacticFlags:[];
+  const bonus=(active.filter(Boolean).length)*.025;
+  if(home===mine)h+=bonus;else a+=bonus;
+ }
+ return [tlPoissonGoals(h),tlPoissonGoals(a)];
+}
+function tlChooseScorer(starters){
+ const candidates=starters.filter(p=>p.pos!=='GK');
+ if(!candidates.length)return 'Own goal';
+ const weights=candidates.map(p=>{
+  const posWeight={ST:5.5,AMC:3.5,ML:2.0,MR:2.0,MC:1.7,DL:.35,DR:.35,DC:.3}[p.pos]||.7;
+  return posWeight*Math.max(.3,Math.pow((p.rating||60)/70,3));
+ });
+ let r=Math.random()*weights.reduce((a,b)=>a+b,0);
+ for(let i=0;i<candidates.length;i++){r-=weights[i];if(r<=0)return candidates[i].name}
+ return candidates[candidates.length-1].name;
+}
+// Youth players can improve every five completed league matches, once per block.
+// Progress is stored so reloading the game never repeats an award.
+const tlYouthDevelopmentPreviousPlay=playInstantMatch;
+playInstantMatch=function(){
+ const before=currentWeek();
+ tlYouthDevelopmentPreviousPlay();
+ const after=currentWeek();
+ if(before<0||before===after)return;
+ const played=after<0?22:after;
+ if(played===0||played%5!==0)return;
+ const key='touchlineYouthDevelopment_'+careerClub()+'_'+tlSeason();
+ const last=Number(localStorage.getItem(key)||0);
+ if(last>=played)return;
+ const youth=tlYouthLoad();
+ const improved=[];
+ for(const p of youth){
+  // Youngest prospects tend to develop faster; potential caps progression.
+  if(!Number.isFinite(p.potential))p.potential=Math.min(88,Math.max(p.rating+5,p.rating+8+Math.floor(Math.random()*17)));
+  const chance=p.age<=16?.7:p.age===17?.52:.4;
+  if(p.rating<p.potential&&Math.random()<chance){
+   const gain=Math.min(p.potential-p.rating,p.age<=16&&Math.random()<.35?2:1);
+   p.rating+=gain;improved.push(p.name+' +'+gain);
+  }
+ }
+ tlYouthSave(youth);
+ localStorage.setItem(key,String(played));
+ const box=document.getElementById('resultsBody');
+ if(box){const note=document.createElement('div');note.style.fontSize='1.2cqw';note.style.color='#ffdf70';note.textContent='Youth academy review: '+(improved.length?improved.join(' · '):'No rating increases this time');box.appendChild(note)}
+};
+</script>
+
+
+<style>
+.tl-income-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1%;margin:1% 0 2%}
+.tl-income-summary .ex-metric{font-size:1.32cqw;margin:0;padding:5%;text-align:center}
+.tl-income-ledger{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr;gap:1%;padding:.6% 1%;border-bottom:1px solid #ffffff28;font-size:1.12cqw}
+.tl-income-ledger:nth-child(even){background:#1b4787}
+.tl-income-ledger.head{color:#ffe18a;font-weight:900}
+</style>
+<script>
+// Regular club income is credited once per completed matchweek, never on refresh.
+// All amounts are in pounds; each season has an independent saved ledger.
+function tlIncomeKey(season){return 'touchlineIncome_'+careerClub()+'_season'+(season||tlSeason())}
+function tlIncomeData(season){
+ let saved=null;try{saved=JSON.parse(localStorage.getItem(tlIncomeKey(season))||'null')}catch(e){}
+ return saved&&Array.isArray(saved.weeks)?saved:{weeks:[]};
+}
+function tlIncomeTotals(data){
+ return data.weeks.reduce((t,w)=>{t.tickets+=(w.tickets||0);t.sponsor+=(w.sponsor||0);t.merch+=(w.merch||0);t.total+=(w.total||0);return t},{tickets:0,sponsor:0,merch:0,total:0});
+}
+function tlIncomePerformance(){
+ // Position-based supporter demand: top clubs draw larger crowds.
+ const table=finalSeasonTable(),position=table.findIndex(t=>t.name===careerClub())+1;
+ return position>0?Math.max(.85,Math.min(1.15,1.15-(position-1)*.027)) : 1;
+}
+function tlCreditIncome(weekIndex,wasHome){
+ const season=tlSeason(),ledger=tlIncomeData(season),week=weekIndex+1;
+ if(ledger.weeks.some(w=>w.week===week))return null;
+ const d=tlDivision(),performance=tlIncomePerformance();
+ const ticketBase=[8000,30000,150000,900000][d];
+ const sponsorBase=[3000,12000,65000,450000][d];
+ const merchBase=[1000,4000,20000,150000][d];
+ // Small match-to-match variation, with league performance influencing support.
+ const tickets=wasHome?Math.round(ticketBase*performance*(.94+Math.random()*.12)):0;
+ const sponsor=Math.round(sponsorBase*(.97+Math.random()*.06));
+ const merch=Math.round(merchBase*performance*(.95+Math.random()*.1));
+ const entry={week,home:wasHome,tickets,sponsor,merch,total:tickets+sponsor+merch};
+ ledger.weeks.push(entry);localStorage.setItem(tlIncomeKey(season),JSON.stringify(ledger));
+ const f=financeData();f.balance+=entry.total;storeFinance(f);
+ return entry;
+}
+const tlIncomePreviousMatch=playInstantMatch;
+playInstantMatch=function(){
+ const before=currentWeek();if(before<0)return;
+ const fixture=leagueMatches[before].find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());
+ const wasHome=!!fixture&&teams[fixture.home]===careerClub();
+ tlIncomePreviousMatch();
+ const after=currentWeek();if(after===before)return;
+ const entry=tlCreditIncome(before,wasHome);if(!entry)return;
+ const box=document.getElementById('resultsBody');
+ if(box){const note=document.createElement('div');note.style.fontSize='1.2cqw';note.style.color='#ffdf70';note.textContent='Club income: +'+pounds(entry.total)+' (Tickets '+pounds(entry.tickets)+' · Sponsorship '+pounds(entry.sponsor)+' · Merchandise '+pounds(entry.merch)+')';box.appendChild(note)}
+};
+const tlIncomePreviousFinances=openFinances;
+openFinances=function(){
+ tlIncomePreviousFinances();
+ const body=document.getElementById('financeBody'),ledger=tlIncomeData(),totals=tlIncomeTotals(ledger),wages=Number(localStorage.getItem(tlFinKey()))||0;
+ const heading=document.createElement('h3');heading.textContent='SEASON '+tlSeason()+' · CLUB INCOME';heading.style.color='#ffdf70';body.appendChild(heading);
+ const grid=document.createElement('div');grid.className='tl-income-summary';
+ for(const [label,value] of [['TICKET SALES',totals.tickets],['SPONSORSHIP',totals.sponsor],['MERCHANDISE',totals.merch],['TOTAL INCOME',totals.total],['WAGES PAID',-wages],['INCOME LESS WAGES',totals.total-wages]]){
+  const item=document.createElement('div');item.className='ex-metric';item.textContent=label+': '+(value<0?'-':'')+pounds(Math.abs(value));grid.appendChild(item)
+ }
+ body.appendChild(grid);
+ const note=document.createElement('p');note.className='ex-note';note.textContent='Sponsorship and merchandise arrive each matchweek. Ticket revenue is earned at home matches. Attendance responds to league position. Transfer fees and season prizes are separate.';body.appendChild(note);
+ if(ledger.weeks.length){
+  const title=document.createElement('h3');title.textContent='MATCHWEEK INCOME';title.style.color='#ffdf70';body.appendChild(title);
+  const head=document.createElement('div');head.className='tl-income-ledger head';for(const x of ['WEEK','TICKETS','SPONSOR','MERCH','TOTAL']){const cell=document.createElement('span');cell.textContent=x;head.appendChild(cell)}body.appendChild(head);
+  for(const w of [...ledger.weeks].reverse()){
+   const row=document.createElement('div');row.className='tl-income-ledger';for(const x of ['MW '+w.week+(w.home?' · H':' · A'),pounds(w.tickets),pounds(w.sponsor),pounds(w.merch),pounds(w.total)]){const cell=document.createElement('span');cell.textContent=x;row.appendChild(cell)}body.appendChild(row)
+  }
+ }
+};
+const tlIncomePreviousReport=tlRenderFullReport;
+tlRenderFullReport=function(after){
+ tlIncomePreviousReport(after);
+ if(!tlReportSnapshot)return;
+ const season=tlReportSnapshot.nextNumber-1,totals=tlIncomeTotals(tlIncomeData(season));
+ const cols=document.querySelector('#seasonScreen .sr-columns');if(!cols)return;
+ const target=cols.children[1]||cols;
+ tlReportCard(target,'SEASON OPERATING INCOME',[
+  ['Matchday ticket sales',pounds(totals.tickets)],
+  ['Sponsorship',pounds(totals.sponsor)],
+  ['Merchandise',pounds(totals.merch)],
+  ['Total operating income',pounds(totals.total)],
+  ['Player wages', '-'+pounds(Number(localStorage.getItem('touchlinePayroll_'+careerClub()+'_season'+season))||0)]
+ ],'No operating income recorded');
+};
+</script>
+
+</body>
+</html>
