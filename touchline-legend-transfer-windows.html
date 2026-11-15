@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Touchline Legend</title>
+<style>
+*{box-sizing:border-box}
+html,body{
+ margin:0;
+ width:100%;
+ height:100%;
+ background:#06152a;
+ font-family:Arial,sans-serif;
+}
+.screen{
+ width:100%;
+ min-height:100dvh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:0;
+}
+.art{
+ position:relative;
+ width:min(100vw,177.78dvh);
+ aspect-ratio:16/9;
+ background:url('assets/welcome.png') center/100% 100% no-repeat;
+}
+.welcome-hit{
+ position:absolute;
+ left:33%;
+ top:70%;
+ width:34%;
+ height:18%;
+ border:0;
+ padding:0;
+ background:transparent;
+ cursor:pointer;
+}
+#menu{
+ display:none;
+ background:#06152a;
+}
+.office-art{
+ position:relative;
+ width:min(100vw,177.78dvh);
+ aspect-ratio:16/9;
+ background:url('assets/manager-office.png') center/100% 100% no-repeat;
+}
+.office-hit{
+ position:absolute;
+ left:30%;
+ width:40%;
+ height:10%;
+ border:0;
+ padding:0;
+ background:transparent;
+ cursor:pointer;
+ appearance:none;
+}
+.office-hit:focus-visible,.welcome-hit:focus-visible{
+ outline:3px solid white;
+ border-radius:20px;
+}
+.new-career{top:38.5%}
+.continue-career{top:49.2%}
+.how-to-play{top:60%}
+.settings{top:70.7%}
+.back{top:81.5%}
+</style>
+
+<style>
+#career,#clubs{
+ display:none;
+ background:#06152a;
+}
+.game-art{
+ position:relative;
+ width:min(100vw,177.78dvh);
+ aspect-ratio:16/9;
+ background-size:100% 100%;
+ background-repeat:no-repeat;
+}
+.career-art{
+ background-image:url('assets/new-career.png');
+}
+.club-art{
+ background-image:url('assets/clubs.png');
+}
+.hit{
+ position:absolute;
+ border:0;
+ padding:0;
+ margin:0;
+ background:transparent;
+ cursor:pointer;
+ appearance:none;
+}
+.hit:focus-visible{
+ outline:3px solid white;
+ border-radius:12px;
+}
+.name-input{
+ position:absolute;
+ left:49%;
+ top:42%;
+ width:25%;
+ height:6%;
+ border:0;
+ background:white;
+ color:#162d50;
+ font:bold clamp(12px,2vw,25px) Arial;
+ text-align:center;
+ border-radius:20px;
+}
+.career-choose{left:14%;top:53%;width:73%;height:12%}
+.career-start{left:36%;top:68%;width:49%;height:11%}
+.career-back{left:21%;top:81%;width:24%;height:12%}
+.club-choice{
+ position:absolute;
+ width:26.5%;
+ height:8.5%;
+ border:0;
+ background:transparent;
+ cursor:pointer;
+ border-radius:12px;
+}
+.club-choice.selected{
+ outline:4px solid #ffe94b;
+ outline-offset:-3px;
+ background:rgba(255,230,0,.15);
+}
+.club-back{left:6%;top:80%;width:34%;height:11%}
+.club-confirm{left:42%;top:80%;width:53%;height:11%}
+</style>
+
+<style>
+#dashboard{
+ display:none;
+ background:#06152a;
+}
+.dashboard-art{
+ position:relative;
+ width:min(100vw,177.78dvh);
+ aspect-ratio:16/9;
+ background:url('assets/manager-dashboard.png')
+   center/100% 100% no-repeat;
+}
+.dashboard-hit{
+ position:absolute;
+ width:18.5%;
+ height:21%;
+ border:0;
+ padding:0;
+ margin:0;
+ background:transparent;
+ cursor:pointer;
+ appearance:none;
+ border-radius:15px;
+}
+.dashboard-hit:focus-visible{
+ outline:3px solid white;
+}
+</style>
+
+<style>
+.dashboard-live{
+ position:absolute;
+ left:16%;
+ top:28%;
+ width:68%;
+ min-height:5%;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:22px;
+ color:#fff;
+ font:bold clamp(12px,1.5vw,22px) Arial;
+ text-shadow:2px 2px 3px #06152a;
+ white-space:nowrap;
+ pointer-events:none;
+}
+</style>
+
+<style>
+#squadScreen{display:none;background:#06152a}
+.squad-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;overflow:hidden;background:linear-gradient(115deg,#10284c99,#081a38aa),url('assets/manager-dashboard.png') center/100% 100% no-repeat;container-type:inline-size;color:white}
+.sq-title{position:absolute;left:24%;top:3%;width:52%;height:13%;border:3px solid #ffc83d;border-radius:40px;background:linear-gradient(#1754b5,#071d50);box-shadow:0 4px 0 #03102a,0 0 15px #ffc83d77;display:flex;align-items:center;justify-content:center;font-size:3.5cqw;font-weight:900;text-shadow:2px 3px #06152a}
+.sq-panel{position:absolute;top:19%;height:64%;background:linear-gradient(#123e86,#071c46);border:3px solid #f6c33b;border-radius:15px;box-shadow:0 4px 0 #07142c;padding:0.65%;overflow:hidden}
+.sq-pitch-panel{left:2%;width:29%}.sq-xi-panel{left:32%;width:34%}.sq-side-panel{left:67%;width:31%}
+.sq-head{font-weight:900;text-align:center;color:#ffdb6b;font-size:1.55cqw;margin-bottom:1.5%;text-shadow:1px 2px #000}
+.sq-form{display:flex;align-items:center;justify-content:center;gap:5%;height:12%;font-size:1.35cqw;font-weight:bold}
+.sq-form button,.sq-footer button{color:white;background:linear-gradient(#2469c9,#0a2b78);border:2px solid #ffc83d;border-radius:15px;font-weight:900;cursor:pointer;text-shadow:1px 1px #001533}
+.sq-form button{height:95%;width:18%;font-size:1.5cqw}
+.sq-pitch{position:relative;margin:2% auto;width:94%;height:79%;border:2px solid #c9f1c7;border-radius:6px;background:repeating-linear-gradient(0deg,#1b8241 0%,#1b8241 12.5%,#207b3c 12.5%,#207b3c 25%);overflow:hidden}
+.sq-pitch:before{content:'';position:absolute;left:0;right:0;top:50%;border-top:2px solid #bce3b9}.sq-pitch:after{content:'';position:absolute;left:35%;top:41%;width:30%;height:18%;border:2px solid #bce3b9;border-radius:50%}
+.sq-marker{position:absolute;transform:translate(-50%,-50%);z-index:2;min-width:17%;max-width:25%;padding:2% 1%;border:2px solid #fbd053;border-radius:9px;background:#1555a8;color:#fff;font-size:1cqw;font-weight:bold;text-align:center;cursor:pointer;line-height:1.15}.sq-marker.goalkeeper{background:#c48c0b}.sq-marker.active{background:#f3d05b;color:#06152a}
+#squadXI{height:86%}#squadSubs,#squadReserves{height:76%}
+.sq-cols,.sq-row{display:grid;grid-template-columns:7% 49% 13% 13% 18%;align-items:center;gap:0;text-align:center}.sq-cols{height:6%;font-size:0.94cqw;color:#ffe18a;font-weight:bold}.sq-row{width:100%;height:9.09%;border:0;border-bottom:1px solid #8cadd144;color:white;background:#22569c;font-size:1.04cqw;font-weight:bold;cursor:pointer;padding:0}.sq-row:nth-child(even){background:#163d78}.sq-row.active{background:#d7aa2e;color:#08172d}.sq-row span:nth-child(2){text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding-left:2%}
+.sq-side-section{height:50%;overflow:hidden}.sq-side-section .sq-row{height:14.28%;font-size:0.91cqw}.sq-side-section .sq-cols{height:10%}.sq-side-section .sq-head{margin:0;height:12%}
+.sq-footer{position:absolute;left:2%;right:2%;bottom:2%;height:12%;display:flex;gap:1.5%;align-items:center}.sq-footer button{flex:1;height:80%;font-size:1.45cqw}.sq-footer button:last-child{background:linear-gradient(#21aa3b,#08611c)}
+.sq-message{position:absolute;left:20%;right:20%;top:16%;text-align:center;font-size:1.1cqw;font-weight:bold;color:#ffe58b;pointer-events:none}
+</style>
+
+<style>
+#tacticsScreen{display:none;background:#06152a}
+.tac-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;overflow:hidden;container-type:inline-size;color:white;background:linear-gradient(110deg,#091a3b99,#07132ba8),url('assets/manager-dashboard.png') center/100% 100% no-repeat;font-family:Arial,sans-serif}
+.tac-title{position:absolute;left:28%;top:2%;width:44%;height:12%;display:grid;place-items:center;border:3px solid #ffc83d;border-radius:50px;background:linear-gradient(#1765c6,#071c50);font-size:4cqw;font-weight:900;text-shadow:2px 3px #000;box-shadow:0 4px 0 #03102a}
+.tac-panel{position:absolute;top:17%;height:67%;background:linear-gradient(#12458e,#061c49);border:3px solid #ffcf42;border-radius:20px;box-shadow:0 5px 0 #03102a;padding:1%;overflow:hidden}
+.tac-left{left:2%;width:27%}.tac-middle{left:30%;width:40%;padding:.7%}.tac-right{left:71%;width:27%}
+.tac-heading{color:#ffe073;text-align:center;font-size:1.65cqw;font-weight:900;text-shadow:1px 2px #000;margin:0 0 3%}
+.tac-choice{display:block;width:94%;margin:2.5% auto;padding:2% 1%;border:2px solid #ffd44d;border-radius:13px;background:linear-gradient(#206acb,#092969);color:white;font-size:1.55cqw;font-weight:900;text-shadow:1px 2px #00112a;cursor:pointer}
+.tac-choice.selected{background:linear-gradient(#ffd952,#bc7900);color:#fff;border-color:#fff2a4;box-shadow:0 0 8px #ffdc59}
+.tac-sep{height:3%;margin-top:5%;border-top:1px solid #d8b35488}
+.tac-pitch{position:relative;width:100%;height:96%;border:3px solid #dbefca;border-radius:8px;overflow:hidden;background:repeating-linear-gradient(0deg,#13853b 0%,#13853b 12.5%,#0d7434 12.5%,#0d7434 25%)}
+.tac-pitch:before{content:'';position:absolute;left:0;right:0;top:50%;border-top:2px solid #bfe5bb}.tac-pitch:after{content:'';position:absolute;left:35%;top:40%;width:30%;height:20%;border:2px solid #bfe5bb;border-radius:50%}
+.tac-player{position:absolute;transform:translate(-50%,-50%);min-width:16%;max-width:27%;padding:1.2% 1%;border:2px solid #ffdb52;border-radius:12px;background:linear-gradient(#1d68c5,#082c75);text-align:center;color:white;font-size:1.12cqw;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:1px 1px #001b43;z-index:2}.tac-player.gk{background:linear-gradient(#e3b52b,#a66a04)}
+.tac-instruction{display:flex;align-items:center;gap:4%;width:96%;margin:4% auto;padding:3%;border:2px solid #d4e1ff;border-radius:13px;background:linear-gradient(#1c66be,#08265e);color:white;font-size:1.35cqw;font-weight:800;cursor:pointer;text-align:left}.tac-check{display:grid;place-items:center;flex:0 0 16%;aspect-ratio:1;border:2px solid white;border-radius:6px;background:#081b3c;font-size:1.4cqw}.tac-instruction.selected .tac-check{background:#159b39}
+.tac-footer{position:absolute;left:4%;right:4%;bottom:2%;height:11%;display:flex;gap:5%}.tac-footer button{flex:1;border:3px solid #ffce3e;border-radius:20px;background:linear-gradient(#2268c5,#08245f);color:white;font-size:2cqw;font-weight:900;text-shadow:2px 2px #06152a;cursor:pointer}.tac-footer button:last-child{background:linear-gradient(#20b541,#046320)}
+</style>
+</head>
+<body>
+
+<main id="welcome" class="screen">
+ <div class="art">
+  <button class="welcome-hit"
+   aria-label="Welcome"
+   onclick="showMenu()"></button>
+ </div>
+</main>
+
+<section id="menu" class="screen">
+ <div class="office-art">
+  <button class="office-hit new-career"
+   aria-label="New Career"
+   onclick="openCareer()"></button>
+
+  <button class="office-hit continue-career"
+   aria-label="Continue Career"
+   onclick="continueCareer()"></button>
+
+  <button class="office-hit how-to-play"
+   aria-label="How to Play"
+   onclick="officeAction('help')"></button>
+
+  <button class="office-hit settings"
+   aria-label="Settings"
+   onclick="officeAction('settings')"></button>
+
+  <button class="office-hit back"
+   aria-label="Back"
+   onclick="returnWelcome()"></button>
+ </div>
+</section>
+
+<script>
+function showMenu(){
+ document.getElementById('welcome').style.display='none';
+ document.getElementById('menu').style.display='flex';
+}
+function returnWelcome(){
+ document.getElementById('menu').style.display='none';
+ document.getElementById('welcome').style.display='flex';
+}
+function officeAction(action){
+ const messages={
+  new:'New Career screen coming next!',
+  continue:'No saved career yet.',
+  help:'How to Play screen coming soon.',
+  settings:'Settings screen coming soon.'
+ };
+ alert(messages[action] || 'Coming soon.');
+}
+</script>
+
+<section id="career" class="screen">
+ <div class="game-art career-art">
+  <input id="managerName" class="name-input"
+   placeholder="Your name" maxlength="28"
+   aria-label="Manager name">
+  <button class="hit career-choose"
+   aria-label="Choose Your Club"
+   onclick="openClubs()"></button>
+  <button class="hit career-start"
+   aria-label="Start Career"
+   onclick="startCareer()"></button>
+  <button class="hit career-back"
+   aria-label="Back"
+   onclick="showOffice()"></button>
+ </div>
+</section>
+
+<section id="clubs" class="screen">
+ <div class="game-art club-art" id="clubBoard">
+  <button class="hit club-back"
+   aria-label="Back"
+   onclick="backToCareer()"></button>
+  <button class="hit club-confirm"
+   aria-label="Confirm Club"
+   onclick="confirmClub()"></button>
+ </div>
+</section>
+
+<script>
+const teams=[
+ 'Westbridge United','Redmoor Athletic','Ironvale FC',
+ 'Brookfield Town','Seabourne FC','Oakchester United',
+ 'Kingsford Town','Ashbourne Rovers','Northwick Albion',
+ 'Eastport City','Ravenshill FC','Ledgemont Athletic'
+];
+let pendingClub=-1;
+let chosenClub=-1;
+
+function screen(id){
+ for(const name of ['welcome','menu','career','clubs']){
+  document.getElementById(name).style.display=
+    name===id?'flex':'none';
+ }
+}
+function openCareer(){screen('career')}
+function showOffice(){screen('menu')}
+function openClubs(){
+ pendingClub=chosenClub;
+ updateClubSelection();
+ screen('clubs');
+}
+function backToCareer(){screen('career')}
+function chooseClub(i){
+ pendingClub=i;
+ updateClubSelection();
+}
+function updateClubSelection(){
+ document.querySelectorAll('.club-choice')
+  .forEach((b,i)=>{
+   b.classList.toggle('selected',i===pendingClub);
+  });
+}
+function confirmClub(){
+ if(pendingClub<0){
+  alert('Please choose your club.');
+  return;
+ }
+ chosenClub=pendingClub;
+ screen('career');
+}
+function startCareer(){
+ const name=document.getElementById('managerName').value.trim();
+ if(!name){
+  alert('Please enter your manager name.');
+  return;
+ }
+ if(chosenClub<0){
+  alert('Please choose your club.');
+  return;
+ }
+ const career={manager:name,club:teams[chosenClub]};
+ localStorage.setItem('touchlineCareer',JSON.stringify(career));
+ openDashboard();
+}
+const board=document.getElementById('clubBoard');
+teams.forEach((team,i)=>{
+ const button=document.createElement('button');
+ button.className='club-choice';
+ button.setAttribute('aria-label',team);
+ button.style.left=(7.5+(i%3)*30.1)+'%';
+ button.style.top=(34.5+Math.floor(i/3)*11.1)+'%';
+ button.onclick=()=>chooseClub(i);
+ board.appendChild(button);
+});
+</script>
+
+<section id="dashboard" class="screen">
+ <div class="dashboard-art" id="dashboardBoard">
+ 
+</div>
+</section>
+
+<script>
+const dashboardButtons=[
+ 'Squad','Tactics','Fixtures','League Table',
+ 'Transfers','Finances','Next Match','Save Game'
+];
+
+const dashboardBoard=document.getElementById('dashboardBoard');
+
+dashboardButtons.forEach((name,i)=>{
+ const b=document.createElement('button');
+ b.className='dashboard-hit';
+ b.setAttribute('aria-label',name);
+ b.style.left=(13.5+(i%4)*19.2)+'%';
+ b.style.top=(35.5+Math.floor(i/4)*24)+'%';
+ b.onclick=()=>dashboardAction(name);
+ dashboardBoard.appendChild(b);
+});
+
+function dashboardAction(name){
+ if(name==='Save Game'){
+  alert('Career saved successfully.');
+  return;
+ }
+ alert(name+' screen coming next!');
+}
+
+function openDashboard(){
+ for(const id of ['welcome','menu','career','clubs','dashboard']){
+  document.getElementById(id).style.display=
+   id==='dashboard'?'flex':'none';
+ }
+}
+
+function continueCareer(){
+ const saved=localStorage.getItem('touchlineCareer');
+ if(!saved){
+  alert('No saved career found.');
+  return;
+ }
+ openDashboard();
+}
+</script>
+
+<script>
+function updateDashboardLive(){
+ const el=document.getElementById('dashboardLive');
+ if(!el)return;
+ let career={};
+ try{
+  career=JSON.parse(
+   localStorage.getItem('touchlineCareer')||'{}'
+  );
+ }catch(e){}
+ el.textContent=
+  'MANAGER: '+(career.manager||'Unknown')+
+  '     |     CLUB: '+(career.club||'Not selected')+
+  '     |     SEASON: 2026/27';
+}
+document.addEventListener('click',()=>{
+ const d=document.getElementById('dashboard');
+ if(d && d.style.display==='flex'){
+  updateDashboardLive();
+ }
+});
+updateDashboardLive();
+</script>
+
+<section id="squadScreen" class="screen"><div class="squad-art" id="squadArt">
+<div class="sq-title">SQUAD MANAGEMENT</div><div class="sq-message" id="squadStatus" aria-live="polite"></div>
+<div class="sq-panel sq-pitch-panel"><div class="sq-head">TEAM SHAPE</div><div class="sq-form"><button onclick="squadFormationChange(-1)" aria-label="Previous formation">◀</button><span id="squadFormation">4-4-2</span><button onclick="squadFormationChange(1)" aria-label="Next formation">▶</button></div><div class="sq-pitch" id="squadPitch"></div></div>
+<div class="sq-panel sq-xi-panel"><div class="sq-head">STARTING XI (11)</div><div class="sq-cols"><span>#</span><span>PLAYER</span><span>POS</span><span>AGE</span><span>RTG</span></div><div id="squadXI"></div></div>
+<div class="sq-panel sq-side-panel"><div class="sq-side-section"><div class="sq-head">SUBSTITUTES (7)</div><div class="sq-cols"><span>#</span><span>PLAYER</span><span>POS</span><span>AGE</span><span>RTG</span></div><div id="squadSubs"></div></div><div class="sq-side-section"><div class="sq-head">RESERVES (7)</div><div class="sq-cols"><span>#</span><span>PLAYER</span><span>POS</span><span>AGE</span><span>RTG</span></div><div id="squadReserves"></div></div></div>
+<div class="sq-footer"><button onclick="squadBack()">BACK</button><button onclick="squadAutoSelect()">AUTO SELECT</button><button onclick="squadConfirm()">CONFIRM SQUAD</button></div>
+</div></section>
+
+<script>
+const squadNames=[
+ ['Jack Bennett','GK',27,72],
+ ['Chris Morgan','DR',26,68],
+ ['Ryan Cooper','DC',28,70],
+ ['Mark Thompson','DC',29,69],
+ ['James Walker','DL',27,68],
+ ['Luke Harris','MC',28,71],
+ ['Paul Edwards','ML',27,69],
+ ['David Clarke','MC',29,70],
+ ['Jack Morris','MR',26,69],
+ ['Sam Turner','AMC',28,73],
+ ['Ben Williams','ST',30,74],
+ ['Tom Richards','GK',25,67],
+ ['Harry Price','MC',24,69],
+ ['Adam Wilson','MC',25,68],
+ ['Daniel Foster','ST',27,71],
+ ['Michael Green','ST',28,69],
+ ['Nathan Hill','ST',26,68],
+ ['Steve Bailey','DR',25,67],
+ ['Isobel Carter','ML',24,66],
+ ['Dan Roberts','MC',24,66],
+ ['Mark Reeves','DC',27,67],
+ ['Liam Brooks','MR',23,66],
+ ['Callum White','AMC',24,67],
+ ['Alex Reid','ST',25,66],
+ ['Oliver James','DC',26,68]
+];
+
+const formations=['4-4-2','4-3-3','3-5-2'];
+let squadFormationIndex=0;
+let squadSelected=-1;
+let squadPlayers=squadNames.map((p,i)=>({
+ id:i,
+ name:p[0],
+ pos:p[1],
+ age:p[2],
+ rating:p[3]
+}));
+
+function squadSave(){
+ const career=JSON.parse(
+  localStorage.getItem('touchlineCareer')||'{}'
+ );
+ if(!career.club)return;
+ localStorage.setItem(
+  'touchlineSquad_'+career.club,
+  JSON.stringify({
+   players:squadPlayers,
+   formation:squadFormationIndex,
+   squadOrderVersion:2
+  })
+ );
+}
+
+function squadLoad(){
+ const career=JSON.parse(
+  localStorage.getItem('touchlineCareer')||'{}'
+ );
+ const saved=localStorage.getItem(
+  'touchlineSquad_'+career.club
+ );
+ squadPlayers=squadNames.map((p,i)=>({
+  id:i,name:p[0],pos:p[1],age:p[2],rating:p[3]
+ }));
+ squadFormationIndex=0;
+ if(!saved){
+  const order=legacySlotOrder[0];
+  squadPlayers=[...order.map(i=>squadPlayers[i]),...squadPlayers.slice(11)];
+ }
+ if(saved){
+  try{
+   const data=JSON.parse(saved);
+   if(Array.isArray(data.players) &&
+      data.players.length>=11 && data.players.length<=25){
+    squadPlayers=data.players;
+     if(data.squadOrderVersion!==2 && data.players.length===25){
+      const order=legacySlotOrder[((data.formation||0)%3+3)%3];
+      squadPlayers=[...order.map(i=>squadPlayers[i]),...squadPlayers.slice(11)];
+     }
+   }
+   if(Number.isInteger(data.formation)){
+    squadFormationIndex=
+     ((data.formation%3)+3)%3;
+   }
+  }catch(e){}
+ }
+}
+
+// Squad slots are always ordered goalkeeper, defence, midfield, attack.
+const squadLayouts=[
+ [{p:'GK',x:50,y:91},{p:'DR',x:85,y:69},{p:'DC',x:62,y:69},{p:'DC',x:38,y:69},{p:'DL',x:15,y:69},{p:'MR',x:85,y:39},{p:'MC',x:62,y:39},{p:'MC',x:38,y:39},{p:'ML',x:15,y:39},{p:'ST',x:62,y:16},{p:'ST',x:38,y:16}],
+ [{p:'GK',x:50,y:91},{p:'DR',x:85,y:72},{p:'DC',x:62,y:72},{p:'DC',x:38,y:72},{p:'DL',x:15,y:72},{p:'MC',x:76,y:50},{p:'MC',x:50,y:50},{p:'MC',x:24,y:50},{p:'MR',x:81,y:30},{p:'ST',x:50,y:17},{p:'ML',x:19,y:30}],
+ [{p:'GK',x:50,y:91},{p:'DC',x:76,y:73},{p:'DC',x:50,y:73},{p:'DC',x:24,y:73},{p:'MR',x:88,y:38},{p:'MC',x:68,y:44},{p:'MC',x:50,y:51},{p:'MC',x:32,y:44},{p:'ML',x:12,y:38},{p:'ST',x:62,y:15},{p:'ST',x:38,y:15}]
+];
+// Maps the previous forward-to-goalkeeper slot ordering to the new order.
+const legacySlotOrder=[
+ [10,9,8,7,6,5,4,3,2,1,0],
+ [10,9,8,7,6,5,4,3,2,0,1],
+ [10,9,8,7,6,5,4,3,2,1,0]
+];
+function squadCompatible(player,slot){
+ return (player.pos==='GK')===(slot==='GK');
+}
+function squadPick(i){
+ if(squadSelected===-1){squadSelected=i;squadStatus.textContent='Tap another player to swap';}
+ else if(squadSelected===i){squadSelected=-1;squadStatus.textContent='';}
+ else{
+  const a=squadSelected,layout=squadLayouts[squadFormationIndex];
+  if((a<11&&!squadCompatible(squadPlayers[i],layout[a].p))||(i<11&&!squadCompatible(squadPlayers[a],layout[i].p))){
+   squadStatus.textContent='Goalkeepers must stay in goal';
+  }else{
+   [squadPlayers[a],squadPlayers[i]]=[squadPlayers[i],squadPlayers[a]];
+   squadStatus.textContent='Players swapped — confirm to save';
+  }
+  squadSelected=-1;
+ }
+ squadRender();
+}
+function squadRender(){
+ const layout=squadLayouts[squadFormationIndex];
+ document.getElementById('squadFormation').textContent=formations[squadFormationIndex];
+ for(const id of ['squadXI','squadSubs','squadReserves','squadPitch'])document.getElementById(id).replaceChildren();
+ squadPlayers.forEach((p,i)=>{
+  const row=document.createElement('button');row.type='button';row.className='sq-row'+(i===squadSelected?' active':'');
+  [i+1,p.name,p.pos,p.age,p.rating].forEach(v=>{const span=document.createElement('span');span.textContent=v;row.appendChild(span)});
+  row.onclick=()=>squadPick(i);
+  document.getElementById(i<11?'squadXI':i<18?'squadSubs':'squadReserves').appendChild(row);
+  if(i<11){
+   const marker=document.createElement('button');marker.type='button';marker.className='sq-marker'+(layout[i].p==='GK'?' goalkeeper':'')+(i===squadSelected?' active':'');
+   marker.style.left=layout[i].x+'%';marker.style.top=layout[i].y+'%';
+   marker.textContent=p.name.trim().split(/\s+/).slice(-1)[0];marker.title=p.name+' ('+p.rating+')';marker.setAttribute('aria-label',p.name+' playing '+layout[i].p);
+   marker.onclick=()=>squadPick(i);document.getElementById('squadPitch').appendChild(marker);
+  }
+ });
+}
+function squadFormationChange(direction){
+ squadFormationIndex=(squadFormationIndex+direction+formations.length)%formations.length;
+ // Reassign the existing XI to suitable slots; do not silently replace players.
+ const slots=squadLayouts[squadFormationIndex];
+ const pool=squadPlayers.slice(0,11), ordered=[];
+ const score=(p,slot)=>p.pos===slot?100:(p.pos==='GK'&&slot==='GK'?100:(p.pos==='GK'||slot==='GK'?-1000:(({DC:['DL','DR'],DL:['DC','ML'],DR:['DC','MR'],MC:['AMC','ML','MR'],ML:['MC','AMC'],MR:['MC','AMC'],ST:['AMC'],AMC:['MC','ST']}[slot]||[]).includes(p.pos)?50:0)));
+ for(const slot of slots){
+  let best=0;
+  for(let i=1;i<pool.length;i++)if(score(pool[i],slot.p)>score(pool[best],slot.p))best=i;
+  ordered.push(pool.splice(best,1)[0]);
+ }
+ squadPlayers=[...ordered,...squadPlayers.slice(11)];
+ squadSelected=-1;squadStatus.textContent='Formation: '+formations[squadFormationIndex];squadRender();
+}
+function squadAutoSelect(){
+ const layout=squadLayouts[squadFormationIndex];const remaining=[...squadPlayers];const selected=[];
+ const suitability=(player,slot)=>{
+  if(!squadCompatible(player,slot))return -10000;
+  if(player.pos===slot)return player.rating+12;
+  const groups={DC:['DL','DR'],DL:['DC','ML'],DR:['DC','MR'],MC:['AMC','ML','MR'],ML:['MC','AMC'],MR:['MC','AMC'],ST:['AMC'],AMC:['MC','ST']};
+  return player.rating+((groups[slot]||[]).includes(player.pos)?3:-10);
+ };
+ for(const slot of layout){
+  let best=0;
+  for(let i=1;i<remaining.length;i++)if(suitability(remaining[i],slot.p)>suitability(remaining[best],slot.p))best=i;
+  selected.push(remaining.splice(best,1)[0]);
+ }
+ squadPlayers=[...selected,...remaining];squadSelected=-1;
+ squadStatus.textContent='Strongest available team selected — confirm to save';squadRender();
+}
+function squadConfirm(){squadSave();squadSelected=-1;openDashboard();}
+function squadBack(){squadSelected=-1;squadLoad();openDashboard();}
+function openSquad(){
+ squadLoad();squadSelected=-1;squadStatus.textContent='Tap two players to swap';
+ for(const id of ['welcome','menu','career','clubs','dashboard','squadScreen']){
+  const el=document.getElementById(id);if(el)el.style.display=id==='squadScreen'?'flex':'none';
+ }
+ squadRender();
+}
+const originalDashboardAction=dashboardAction;
+dashboardAction=function(name){if(name==='Squad'){openSquad();return;}originalDashboardAction(name)};
+</script>
+
+<section id="tacticsScreen" class="screen"><div class="tac-art">
+<div class="tac-title">TACTICS</div>
+<div class="tac-panel tac-left"><div class="tac-heading">FORMATION</div><div id="tacFormations"></div><div class="tac-sep"></div><div class="tac-heading">MENTALITY</div><div id="tacMentalities"></div></div>
+<div class="tac-panel tac-middle"><div class="tac-pitch" id="tacPitch"></div></div>
+<div class="tac-panel tac-right"><div class="tac-heading">TEAM INSTRUCTIONS</div><div id="tacInstructions"></div></div>
+<div class="tac-footer"><button type="button" onclick="tacticsBack()">BACK</button><button type="button" onclick="tacticsConfirm()">CONFIRM TACTICS</button></div>
+</div></section>
+<script>
+const tacticInstructions=['Play Wider','Use The Wings','Through Balls','Press Higher','Hold Possession'];
+const tacticMentalities=['Attacking','Balanced','Defensive'];
+let tacticMentality='Balanced', tacticFlags=[false,false,false,false,false];
+function tacticKey(){let career={};try{career=JSON.parse(localStorage.getItem('touchlineCareer')||'{}')}catch(e){}return 'touchlineTactics_'+(career.club||'default')}
+function tacticsLoad(){
+ squadLoad();
+ tacticMentality='Balanced';tacticFlags=[false,false,false,false,false];
+ try{const saved=JSON.parse(localStorage.getItem(tacticKey())||'null');if(saved){if(tacticMentalities.includes(saved.mentality))tacticMentality=saved.mentality;if(Array.isArray(saved.instructions)&&saved.instructions.length===5)tacticFlags=saved.instructions.map(Boolean)}}catch(e){}
+}
+function tacticsRender(){
+ const forms=document.getElementById('tacFormations'),mental=document.getElementById('tacMentalities'),inst=document.getElementById('tacInstructions'),pitch=document.getElementById('tacPitch');
+ forms.replaceChildren();mental.replaceChildren();inst.replaceChildren();pitch.replaceChildren();
+ formations.forEach((f,i)=>{const b=document.createElement('button');b.type='button';b.className='tac-choice'+(squadFormationIndex===i?' selected':'');b.textContent=f;b.onclick=()=>{if(squadFormationIndex!==i){squadFormationChange((i-squadFormationIndex+formations.length)%formations.length)}tacticsRender()};forms.appendChild(b)});
+ tacticMentalities.forEach(m=>{const b=document.createElement('button');b.type='button';b.className='tac-choice'+(tacticMentality===m?' selected':'');b.textContent=m;b.onclick=()=>{tacticMentality=m;tacticsRender()};mental.appendChild(b)});
+ tacticInstructions.forEach((label,i)=>{const b=document.createElement('button');b.type='button';b.className='tac-instruction'+(tacticFlags[i]?' selected':'');b.setAttribute('aria-pressed',String(tacticFlags[i]));const c=document.createElement('span');c.className='tac-check';c.textContent=tacticFlags[i]?'✓':'';const t=document.createElement('span');t.textContent=label;b.append(c,t);b.onclick=()=>{tacticFlags[i]=!tacticFlags[i];tacticsRender()};inst.appendChild(b)});
+ squadLayouts[squadFormationIndex].forEach((slot,i)=>{const p=squadPlayers[i];if(!p)return;const b=document.createElement('span');b.className='tac-player'+(slot.p==='GK'?' gk':'');b.style.left=slot.x+'%';b.style.top=slot.y+'%';b.textContent=p.name.trim().split(/\s+/).slice(-1)[0];b.title=p.name;pitch.appendChild(b)});
+}
+function openTactics(){tacticsLoad();for(const id of ['welcome','menu','career','clubs','dashboard','squadScreen','tacticsScreen']){const el=document.getElementById(id);if(el)el.style.display=id==='tacticsScreen'?'flex':'none'}tacticsRender()}
+function tacticsBack(){openDashboard()}
+function tacticsConfirm(){squadSave();localStorage.setItem(tacticKey(),JSON.stringify({mentality:tacticMentality,instructions:tacticFlags}));openDashboard()}
+const tacticsPreviousDashboardAction=dashboardAction;
+dashboardAction=function(name){if(name==='Tactics'){openTactics();return}tacticsPreviousDashboardAction(name)};
+</script>
+<style>
+#fixturesScreen,#leagueScreen{display:none;background:#06152a}
+.fl-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;container-type:inline-size;overflow:hidden;color:#fff;background:linear-gradient(110deg,#091a3bc9,#07132bd0),url('assets/manager-dashboard.png') center/100% 100% no-repeat}
+.fl-title{position:absolute;left:25%;top:3%;width:50%;height:12%;border:3px solid #ffcf42;border-radius:50px;background:linear-gradient(#1765c6,#071c50);display:grid;place-items:center;font-size:3.5cqw;font-weight:900;text-shadow:2px 3px #00132b}
+.fl-panel{position:absolute;left:11%;top:19%;width:78%;height:65%;border:3px solid #ffcf42;border-radius:18px;background:linear-gradient(#12458e,#061c49);padding:1.5%;overflow:hidden}
+.fl-weekbar{height:12%;display:flex;align-items:center;justify-content:center;gap:3%;font-size:1.6cqw;font-weight:900;color:#ffdf70}
+.fl-weekbar button{height:95%;min-width:8%;border:2px solid #ffcf42;border-radius:10px;background:#1457a7;color:white;font-size:1.8cqw;cursor:pointer}
+.fl-fixture-grid{height:85%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:2%}
+.fl-match{display:grid;grid-template-columns:1fr 14% 1fr;align-items:center;gap:1%;padding:1% 2%;border:2px solid #507fc0;border-radius:12px;background:#153d79;text-align:center;font-size:1.35cqw;font-weight:800}
+.fl-match.mine{border-color:#ffdc4d;background:#245ca3}
+.fl-score{color:#ffe078;font-size:1.65cqw;white-space:nowrap}
+.fl-table{width:100%;border-collapse:collapse;font-size:1.33cqw;font-weight:750;text-align:center;table-layout:fixed}
+.fl-table th{color:#ffdf70;border-bottom:2px solid #ffcf42;height:3.4cqw}
+.fl-table td{height:3.05cqw;border-bottom:1px solid #ffffff30;background:#20519a}
+.fl-table tr:nth-child(even) td{background:#143a78}
+.fl-table tr.mine td{background:#84601a;color:white}
+.fl-table th:nth-child(2),.fl-table td:nth-child(2){width:39%;text-align:left;padding-left:1%}
+.fl-subtitle{text-align:center;color:#ffe28b;font-size:1.25cqw;height:7%;font-weight:bold}
+/* League table only: fit all twelve clubs without scrolling. */
+#leagueScreen .fl-table{font-size:1.18cqw}
+#leagueScreen .fl-table th{height:2.8cqw}
+#leagueScreen .fl-table td{height:2.45cqw}
+.fl-footer{position:absolute;left:12%;right:12%;bottom:3%;height:10%;display:flex;gap:3%}
+.fl-footer button{flex:1;border:3px solid #ffcf42;border-radius:18px;background:linear-gradient(#2268c5,#08245f);color:white;font-size:1.9cqw;font-weight:900;cursor:pointer}
+</style>
+<section id="fixturesScreen" class="screen"><div class="fl-art"><div class="fl-title">FIXTURES &amp; RESULTS</div><div class="fl-panel"><div class="fl-weekbar"><button onclick="changeFixtureWeek(-1)" aria-label="Previous matchweek">◀</button><span id="fixtureWeekLabel">MATCHWEEK 1</span><button onclick="changeFixtureWeek(1)" aria-label="Next matchweek">▶</button></div><div class="fl-fixture-grid" id="fixtureMatches"></div></div><div class="fl-footer"><button onclick="openDashboard()">BACK</button><button onclick="openLeague()">LEAGUE TABLE</button></div></div></section>
+<section id="leagueScreen" class="screen"><div class="fl-art"><div class="fl-title">LEAGUE TABLE</div><div class="fl-panel"><div class="fl-subtitle">SEASON 2026/27 · 12 CLUBS</div><table class="fl-table"><thead><tr><th>POS</th><th>CLUB</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>PTS</th></tr></thead><tbody id="leagueRows"></tbody></table></div><div class="fl-footer"><button onclick="openDashboard()">BACK</button><button onclick="openFixtures()">FIXTURES</button></div></div></section>
+<script>
+// Double round robin: 22 matchweeks, six matches each.
+function makeSchedule(){
+ const circle=teams.map((_,i)=>i),weeks=[];
+ for(let round=0;round<11;round++){
+  const matches=[];
+  for(let j=0;j<6;j++){
+   const a=circle[j],b=circle[11-j];
+   matches.push({home:round%2===0?a:b,away:round%2===0?b:a,homeGoals:null,awayGoals:null});
+  }
+  weeks.push(matches);
+  circle.splice(1,0,circle.pop());
+ }
+ return [...weeks,...weeks.map(w=>w.map(m=>({home:m.away,away:m.home,homeGoals:null,awayGoals:null})))];
+}
+const initialSchedule=makeSchedule();
+let leagueMatches=[],fixtureWeek=0;
+function careerClub(){try{return JSON.parse(localStorage.getItem('touchlineCareer')||'{}').club||''}catch(e){return ''}}
+function matchStorageKey(){return 'touchlineMatches_'+careerClub()}
+function loadMatches(){
+ let saved=null;try{saved=JSON.parse(localStorage.getItem(matchStorageKey())||'null')}catch(e){}
+ leagueMatches=Array.isArray(saved)&&saved.length===22&&saved.every(w=>Array.isArray(w)&&w.length===6)?saved:JSON.parse(JSON.stringify(initialSchedule));
+}
+function saveMatches(){localStorage.setItem(matchStorageKey(),JSON.stringify(leagueMatches))}
+function showFootballScreen(id){
+ for(const name of ['welcome','menu','career','clubs','dashboard','squadScreen','tacticsScreen','fixturesScreen','leagueScreen']){
+  const el=document.getElementById(name);if(el)el.style.display=name===id?'flex':'none';
+ }
+}
+function openFixtures(){loadMatches();showFootballScreen('fixturesScreen');renderFixtures()}
+function changeFixtureWeek(n){fixtureWeek=(fixtureWeek+n+22)%22;renderFixtures()}
+function renderFixtures(){
+ document.getElementById('fixtureWeekLabel').textContent='MATCHWEEK '+(fixtureWeek+1)+' OF 22';
+ const host=document.getElementById('fixtureMatches');host.replaceChildren();const club=careerClub();
+ for(const m of leagueMatches[fixtureWeek]){
+  const el=document.createElement('div');el.className='fl-match'+(teams[m.home]===club||teams[m.away]===club?' mine':'');
+  const home=document.createElement('span'),score=document.createElement('span'),away=document.createElement('span');
+  home.textContent=teams[m.home];away.textContent=teams[m.away];score.className='fl-score';
+  score.textContent=Number.isInteger(m.homeGoals)&&Number.isInteger(m.awayGoals)?m.homeGoals+'–'+m.awayGoals:'v';
+  el.append(home,score,away);host.appendChild(el);
+ }
+}
+function openLeague(){loadMatches();showFootballScreen('leagueScreen');renderLeague()}
+function renderLeague(){
+ const stats=teams.map((name,id)=>({name,id,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}));
+ for(const week of leagueMatches)for(const m of week){
+  if(!Number.isInteger(m.homeGoals)||!Number.isInteger(m.awayGoals))continue;
+  const h=stats[m.home],a=stats[m.away];h.p++;a.p++;h.gf+=m.homeGoals;h.ga+=m.awayGoals;a.gf+=m.awayGoals;a.ga+=m.homeGoals;
+  if(m.homeGoals>m.awayGoals){h.w++;h.pts+=3;a.l++}else if(m.homeGoals<m.awayGoals){a.w++;a.pts+=3;h.l++}else{h.d++;a.d++;h.pts++;a.pts++}
+ }
+ stats.sort((a,b)=>b.pts-a.pts||((b.gf-b.ga)-(a.gf-a.ga))||b.gf-a.gf||a.name.localeCompare(b.name));
+ const host=document.getElementById('leagueRows');host.replaceChildren();
+ stats.forEach((t,i)=>{const tr=document.createElement('tr');if(t.name===careerClub())tr.className='mine';
+  [i+1,t.name,t.p,t.w,t.d,t.l,(t.gf-t.ga>0?'+':'')+(t.gf-t.ga),t.pts].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});host.appendChild(tr);
+ });
+}
+const fixturesOriginalOpenDashboard=openDashboard;
+openDashboard=function(){
+ for(const id of ['squadScreen','tacticsScreen','fixturesScreen','leagueScreen']){
+  const el=document.getElementById(id);if(el)el.style.display='none';
+ }
+ fixturesOriginalOpenDashboard();
+};
+const fixturesPreviousDashboardAction=dashboardAction;
+dashboardAction=function(name){if(name==='Fixtures'){openFixtures();return}if(name==='League Table'){openLeague();return}fixturesPreviousDashboardAction(name)};
+</script>
+
+<style>
+#transfersScreen,#financesScreen,#nextMatchScreen,#resultsScreen,#saveScreen{display:none;background:#06152a}
+.ex-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;container-type:inline-size;color:white;background:linear-gradient(110deg,#091a3bca,#07132bdf),url('assets/manager-dashboard.png') center/100% 100% no-repeat;font-family:Arial,sans-serif}
+.ex-heading{position:absolute;top:3%;left:23%;width:54%;height:12%;border:3px solid #ffce42;border-radius:60px;background:linear-gradient(#2169c8,#071b4d);display:grid;place-items:center;font-size:3.2cqw;font-weight:900;text-shadow:2px 3px #00112b}
+.ex-body{position:absolute;top:19%;left:10%;width:80%;height:65%;border:3px solid #ffce42;border-radius:18px;background:linear-gradient(#16488e,#061b47);padding:2%;overflow:auto;font-size:1.45cqw}
+.ex-footer{position:absolute;bottom:3%;left:10%;width:80%;height:10%;display:flex;gap:2%}
+.ex-footer button,.ex-button{border:2px solid #ffce42;border-radius:14px;background:linear-gradient(#2670d0,#07265f);color:white;font-weight:900;font-size:1.7cqw;cursor:pointer;padding:.7% 2%}
+.ex-footer button{flex:1}.ex-footer .primary,.ex-button.primary{background:linear-gradient(#20b744,#006021)}
+.ex-row{display:grid;grid-template-columns:2.4fr .7fr .7fr .7fr 1.1fr;gap:1%;align-items:center;padding:.6% 1%;background:#22549a;margin-bottom:.4%;border-radius:5px;font-size:1.2cqw}
+.ex-row:nth-child(even){background:#153b79}.ex-row button{font-size:1.05cqw;padding:3%;border:1px solid #ffce42;border-radius:8px;background:#075c36;color:white}
+.ex-tabs{display:flex;gap:2%;margin-bottom:1%}.ex-tabs button{flex:1}.ex-metric{padding:2%;margin:1% 0;background:#24539a;border-radius:12px;font-size:1.8cqw}.ex-center{text-align:center;font-size:2.4cqw;line-height:1.65}.ex-note{color:#ffdc75;font-size:1.25cqw;text-align:center;margin:1%}
+</style>
+<section id="transfersScreen" class="screen"><div class="ex-art"><div class="ex-heading">TRANSFER MARKET</div><div class="ex-body"><div class="ex-tabs"><button class="ex-button" onclick="transferTab='buy';renderTransfers()">BUY PLAYERS</button><button class="ex-button" onclick="transferTab='sell';renderTransfers()">SELL PLAYERS</button></div><div class="ex-note" id="transferBudget"></div><div class="ex-row"><b>PLAYER</b><b>POS</b><b>AGE</b><b>RTG</b><b>PRICE</b></div><div id="transferRows"></div></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button onclick="openFinances()">FINANCES</button></div></div></section>
+<section id="financesScreen" class="screen"><div class="ex-art"><div class="ex-heading">CLUB FINANCES</div><div class="ex-body" id="financeBody"></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button onclick="openTransfers()">TRANSFERS</button></div></div></section>
+<section id="nextMatchScreen" class="screen"><div class="ex-art"><div class="ex-heading">NEXT MATCH</div><div class="ex-body ex-center" id="nextMatchBody"></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button class="primary" id="playInstantButton" onclick="playInstantMatch()">PLAY INSTANT MATCH</button></div></div></section>
+<section id="resultsScreen" class="screen"><div class="ex-art"><div class="ex-heading">FULL TIME</div><div class="ex-body ex-center" id="resultsBody"></div><div class="ex-footer"><button class="primary" onclick="openDashboard()">CONTINUE TO DASHBOARD</button><button onclick="openLeague()">LEAGUE TABLE</button></div></div></section>
+<section id="saveScreen" class="screen"><div class="ex-art"><div class="ex-heading">SAVE CAREER</div><div class="ex-body ex-center" id="saveBody"></div><div class="ex-footer"><button onclick="openDashboard()">BACK</button><button class="primary" onclick="saveCareerNow()">SAVE GAME</button></div></div></section>
+<script>
+const extraScreens=['transfersScreen','financesScreen','nextMatchScreen','resultsScreen','saveScreen'];
+function showExtra(id){showFootballScreen(id);for(const n of extraScreens)document.getElementById(n).style.display=n===id?'flex':'none'}
+const beforeExtraDashboard=openDashboard;
+openDashboard=function(){for(const n of extraScreens)document.getElementById(n).style.display='none';beforeExtraDashboard();updateDashboardLive()};
+let transferTab='buy';
+function financeKey(){return 'touchlineFinance_'+careerClub()}
+function financeData(){let v;try{v=JSON.parse(localStorage.getItem(financeKey())||'null')}catch(e){}return v&&typeof v.budget==='number'?v:{budget:35000,balance:245000,spent:0,received:0}}
+function storeFinance(f){localStorage.setItem(financeKey(),JSON.stringify(f))}
+function pounds(n){return '£'+Math.round(n).toLocaleString('en-GB')}
+function playerPrice(p){return Math.max(1000,Math.round((p.rating-55)*650+(30-p.age)*250)/500*500)}
+const marketNames=[['Ethan Cole','DC',23,72],['Oliver Stone','MC',24,74],['Leo Hart','ST',22,73],['Noah Blake','GK',25,70],['Finn Carter','DR',26,71],['Mason Ford','ML',24,70],['Jacob Reed','AMC',22,72],['Oscar Lane','DL',25,69],['George Hayes','MR',23,71],['Archie Brooks','ST',27,72]];
+// Windows: pre-season through matchweek 5, and matchweeks 12–14.
+// The completed-match count determines the next matchweek.
+function transferWindow(){
+ loadMatches();
+ const completed=leagueMatches.filter(week=>week.some(m=>(teams[m.home]===careerClub()||teams[m.away]===careerClub())&&Number.isInteger(m.homeGoals)&&Number.isInteger(m.awayGoals))).length;
+ if(completed===22)return {open:true,id:'offseason',label:'END-OF-SEASON WINDOW',remaining:null};
+ if(completed<5)return {open:true,id:'summer',label:'SUMMER WINDOW',remaining:5-completed};
+ if(completed>=11&&completed<14)return {open:true,id:'winter',label:'WINTER WINDOW',remaining:14-completed};
+ return {open:false,id:'closed',label:completed<11?'CLOSED — WINTER WINDOW OPENS AT MATCHWEEK 12':'CLOSED — REOPENS AT END OF SEASON',remaining:null};
+}
+function marketKey(){return 'touchlineMarket_'+careerClub()+'_'+transferWindow().id}
+// Each window has its own consistent pool; purchases persist for that window.
+const transferFirst=['Ethan','Oliver','Leo','Noah','Finn','Mason','Jacob','Oscar','George','Archie','Theo','Harvey','Alfie','Riley','Freddie','Max','Charlie','Isaac','Toby','Jude','Ellis','Luca','Henry','Reuben','Dylan','Logan','Hugo','Jamie','Rowan','Felix'];
+const transferLast=['Cole','Stone','Hart','Blake','Carter','Ford','Reed','Lane','Hayes','Brooks','Barker','Wells','Dawson','Hughes','Palmer','Fletcher','Woods','Knight','Fisher','Webb','Marsh','Porter','Cross','Mills','Perry','Bennett','Fox','Holt','Bishop','Turner'];
+const transferPositions=['DC','MC','ST','GK','DR','ML','AMC','DL','MR','ST','DC','MC','ST','DR','MC','DL','GK','MR','ML','AMC'];
+function freshMarket(windowId){
+ const offset=windowId==='winter'?11:windowId==='offseason'?21:0;
+ return Array.from({length:14},(_,i)=>{
+  const n=i+offset;
+  return {id:1000+offset*100+i,name:transferFirst[n%transferFirst.length]+' '+transferLast[(n*7+offset)%transferLast.length],pos:transferPositions[(n*3+i)%transferPositions.length],age:21+(n*3)%10,rating:65+(n*7)%11};
+ });
+}
+function marketPlayers(){let v;try{v=JSON.parse(localStorage.getItem(marketKey())||'null')}catch(e){}return Array.isArray(v)?v:freshMarket(transferWindow().id)}
+function openTransfers(){squadLoad();transferTab='buy';showExtra('transfersScreen');renderTransfers()}
+function renderTransfers(){
+ const f=financeData(),host=document.getElementById('transferRows'),win=transferWindow();host.replaceChildren();
+ document.getElementById('transferBudget').textContent=win.label+(win.open&&win.remaining!==null?' · '+win.remaining+' MATCH'+(win.remaining===1?'':'ES')+' REMAINING':'')+'  |  BUDGET: '+pounds(f.budget)+'  |  SQUAD: '+squadPlayers.length+'/25';
+ if(!win.open){host.textContent='Transfers are closed. You can view your squad and finances, but cannot buy or sell until the next window.';return}
+ const players=transferTab==='buy'?marketPlayers():squadPlayers.filter((_,i)=>i>=11);
+ if(!players.length){host.textContent='No players available.';return}
+ players.forEach(p=>{const row=document.createElement('div');row.className='ex-row';[p.name,p.pos,p.age,p.rating].forEach(x=>{const el=document.createElement('span');el.textContent=x;row.appendChild(el)});const b=document.createElement('button');b.textContent=(transferTab==='buy'?'BUY ':'SELL ')+pounds(playerPrice(p));b.onclick=()=>doTransfer(p);row.appendChild(b);host.appendChild(row)});
+}
+function doTransfer(p){
+ const win=transferWindow();if(!win.open){alert('Transfer window is closed.');renderTransfers();return}
+ const f=financeData(),price=playerPrice(p);
+ if(transferTab==='buy'){
+  if(!marketPlayers().some(x=>x.id===p.id)){alert('This player is no longer available.');renderTransfers();return}
+  if(squadPlayers.length>=25){alert('Squad limit is 25. Sell a reserve or substitute first.');return}
+  if(f.budget<price){alert('Insufficient transfer budget.');return}
+  if(!confirm('Sign '+p.name+' for '+pounds(price)+'?'))return;
+  f.budget-=price;f.balance-=price;f.spent+=price;squadPlayers.push(p);
+  localStorage.setItem(marketKey(),JSON.stringify(marketPlayers().filter(x=>x.id!==p.id)));
+ }else{
+  if(!squadPlayers.some((x,i)=>i>=11&&x.id===p.id)){alert('Player is not available to sell.');renderTransfers();return}
+  if(!confirm('Sell '+p.name+' for '+pounds(price)+'?'))return;
+  f.budget+=price;f.balance+=price;f.received+=price;squadPlayers=squadPlayers.filter(x=>x.id!==p.id);
+ }
+ storeFinance(f);squadSave();renderTransfers();
+}
+function openFinances(){showExtra('financesScreen');const f=financeData();document.getElementById('financeBody').innerHTML='<div class="ex-metric">CLUB BALANCE: '+pounds(f.balance)+'</div><div class="ex-metric">TRANSFER BUDGET: '+pounds(f.budget)+'</div><div class="ex-metric">TRANSFER SPENDING: '+pounds(f.spent)+'</div><div class="ex-metric">PLAYER SALES: '+pounds(f.received)+'</div><p class="ex-note">Transfer activity updates these figures automatically.</p>'}
+function currentWeek(){loadMatches();return leagueMatches.findIndex(w=>w.some(m=>teams[m.home]===careerClub()&&m.homeGoals===null||teams[m.away]===careerClub()&&m.awayGoals===null))}
+function openNextMatch(){const w=currentWeek();showExtra('nextMatchScreen');const box=document.getElementById('nextMatchBody'),button=document.getElementById('playInstantButton');if(w<0){box.textContent='Season complete — all 22 matches played.';button.disabled=true;return}button.disabled=false;const m=leagueMatches[w].find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());box.replaceChildren();const lines=['MATCHWEEK '+(w+1)+' OF 22',teams[m.home]+'  v  '+teams[m.away],teams[m.home]===careerClub()?'HOME MATCH':'AWAY MATCH','Formation: '+formations[squadFormationIndex]+'  |  Mentality: '+tacticMentality,'Press PLAY INSTANT MATCH for the result'];lines.forEach(x=>{const d=document.createElement('div');d.textContent=x;box.appendChild(d)})}
+function goals(){let n=0;while(n<6&&Math.random()<.48)n++;return n}
+function playInstantMatch(){const w=currentWeek();if(w<0)return;const matches=leagueMatches[w],my=matches.find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());if(!my)return;const f=financeData();for(const m of matches){if(m.homeGoals!==null)continue;m.homeGoals=goals();m.awayGoals=goals()}saveMatches();const mineHome=teams[my.home]===careerClub(),ours=mineHome?my.homeGoals:my.awayGoals;const attackers=squadPlayers.slice(0,11).filter(p=>p.pos==='ST'||p.pos==='AMC'||p.pos==='MC');const scorers=Array.from({length:ours},()=>attackers.length?attackers[Math.floor(Math.random()*attackers.length)].name:'Own goal');const shotsHome=my.homeGoals+4+Math.floor(Math.random()*9),shotsAway=my.awayGoals+4+Math.floor(Math.random()*9);const possession=45+Math.floor(Math.random()*11);const box=document.getElementById('resultsBody');box.replaceChildren();[teams[my.home]+'  '+my.homeGoals+' – '+my.awayGoals+'  '+teams[my.away],'Matchweek '+(w+1),'Your goalscorers: '+(scorers.join(', ')||'None'),'Shots: '+shotsHome+' – '+shotsAway,'Shots on target: '+Math.min(shotsHome,my.homeGoals+2+Math.floor(Math.random()*3))+' – '+Math.min(shotsAway,my.awayGoals+2+Math.floor(Math.random()*3)),'Possession: '+possession+'% – '+(100-possession)+'%','Corners: '+(2+Math.floor(Math.random()*8))+' – '+(2+Math.floor(Math.random()*8))].forEach(t=>{const d=document.createElement('div');d.textContent=t;box.appendChild(d)});localStorage.setItem('touchlineLastResult_'+careerClub(),box.innerText);showExtra('resultsScreen')}
+function openSave(){showExtra('saveScreen');document.getElementById('saveBody').textContent='Save your career progress, transfers, squad, tactics, fixtures and league results.'}
+function saveCareerNow(){squadSave();saveMatches();localStorage.setItem('touchlineLastSave_'+careerClub(),new Date().toISOString());document.getElementById('saveBody').textContent='CAREER SAVED SUCCESSFULLY';}
+const previousExtraDashboardAction=dashboardAction;
+dashboardAction=function(name){if(name==='Transfers'){openTransfers();return}if(name==='Finances'){openFinances();return}if(name==='Next Match'){squadLoad();tacticsLoad();openNextMatch();return}if(name==='Save Game'){openSave();return}previousExtraDashboardAction(name)};
+</script>
+</body>
+</html>
