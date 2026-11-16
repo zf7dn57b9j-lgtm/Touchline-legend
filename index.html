@@ -610,7 +610,7 @@ function squadFormationChange(direction){
  // Reassign the existing XI to suitable slots; do not silently replace players.
  const slots=squadLayouts[squadFormationIndex];
  const pool=squadPlayers.slice(0,11), ordered=[];
- const score=(p,slot)=>p.pos===slot?100:(p.pos==='GK'&&slot==='GK'?100:(p.pos==='GK'||slot==='GK'?-1000:(({DC:['DL','DR'],DL:['DC','ML'],DR:['DC','MR'],MC:['AMC','ML','MR'],ML:['MC','AMC'],MR:['MC','AMC'],ST:['AMC'],AMC:['MC','ST']}[slot]||[]).includes(p.pos)?50:0)));
+ const score=(p,slot)=>(p.pos===slot||(p.pos==='AMC'&&slot==='MC'))?100:(p.pos==='GK'&&slot==='GK'?100:(p.pos==='GK'||slot==='GK'?-1000:(({DC:['DL','DR'],DL:['DC','ML'],DR:['DC','MR'],MC:['AMC','ML','MR'],ML:['MC','AMC'],MR:['MC','AMC'],ST:['AMC'],AMC:['MC','ST']}[slot]||[]).includes(p.pos)?50:0)));
  for(const slot of slots){
   let best=0;
   for(let i=1;i<pool.length;i++)if(score(pool[i],slot.p)>score(pool[best],slot.p))best=i;
@@ -623,7 +623,7 @@ function squadAutoSelect(){
  const layout=squadLayouts[squadFormationIndex];const remaining=[...squadPlayers];const selected=[];
  const suitability=(player,slot)=>{
   if(!squadCompatible(player,slot))return -10000;
-  if(player.pos===slot)return player.rating+12;
+  if(player.pos===slot||(player.pos==='AMC'&&slot==='MC'))return player.rating+12;
   const groups={DC:['DL','DR'],DL:['DC','ML'],DR:['DC','MR'],MC:['AMC','ML','MR'],ML:['MC','AMC'],MR:['MC','AMC'],ST:['AMC'],AMC:['MC','ST']};
   return player.rating+((groups[slot]||[]).includes(player.pos)?3:-10);
  };
@@ -988,7 +988,7 @@ const tlOldFinances=openFinances;
 openFinances=function(){squadLoad();tlOldFinances();const f=financeData(),body=document.getElementById('financeBody'),used=tlWeeklyWages();const info=document.createElement('div');info.innerHTML='<div class="ex-metric">WEEKLY WAGES: '+pounds(used)+'</div><div class="ex-metric">WAGE BUDGET: '+pounds(tlWageBudget())+'</div><div class="ex-metric">WAGES PAID THIS SEASON: '+pounds(Number(localStorage.getItem(tlFinKey()))||0)+'</div>';body.appendChild(info);const b=document.createElement('button');b.className='ex-button primary';b.textContent='MANAGE CONTRACTS';b.onclick=openContracts;body.appendChild(b)};
 function openContracts(){squadLoad();showExtra('contractsScreen');document.getElementById('contractsScreen').style.display='flex';renderContracts()}
 function renderContracts(){const host=document.getElementById('contractRows');host.replaceChildren();document.getElementById('contractSummary').textContent='WAGES '+pounds(tlWeeklyWages())+' / '+pounds(tlWageBudget())+' PER WEEK · SEASON '+tlSeason();squadPlayers.forEach(p=>{const row=document.createElement('div');row.className='contract-row';[p.name,p.age,p.pos,p.rating,pounds(p.wage),p.contractUntil===tlSeason()?'EXPIRES THIS SEASON':(p.contractUntil-tlSeason())+' SEASONS'].forEach(x=>{const span=document.createElement('span');span.textContent=x;row.appendChild(span)});const b=document.createElement('button');b.textContent='RENEW';b.onclick=()=>tlNegotiate(p);row.appendChild(b);host.appendChild(row)})}
-function tlNegotiate(p){const minimum=tlWage(p.rating,tlDivision()),request=Math.max(minimum,Math.round(p.wage*1.12/25)*25),input=prompt(p.name+' requests '+pounds(request)+'/week. Enter your weekly wage offer (£):',String(request));if(input===null)return;const offer=Math.round(Number(input));if(!Number.isFinite(offer)||offer<=0){alert('Enter a valid weekly wage.');return}const available=tlWageBudget()-tlWeeklyWages()+p.wage;if(offer>available){alert('This offer exceeds your wage budget.');return}const threshold=Math.max(minimum,request);if(offer<threshold){alert(p.name+' rejected the offer and countered at '+pounds(threshold)+'/week.');return}if(!confirm(p.name+' accepts '+pounds(offer)+'/week for 2 seasons. Confirm contract?'))return;p.wage=offer;p.contractUntil=tlSeason()+2;squadSave();renderContracts()}
+function tlNegotiate(p){const minimum=tlWage(p.rating,tlDivision()),request=Math.max(minimum,Math.round(p.wage*1.12/25)*25),input=prompt(p.name+' requests '+pounds(request)+'/week. Enter your weekly wage offer (£):',String(request));if(input===null)return;const offer=Math.round(Number(input));if(!Number.isFinite(offer)||offer<=0){alert('Enter a valid weekly wage.');return}const available=tlWageBudget()-tlWeeklyWages()+p.wage;if(offer>available){alert('This offer exceeds your wage budget.');return}const threshold=Math.max(minimum,request);if(offer<threshold){alert(p.name+' rejected the offer and countered at '+pounds(threshold)+'/week.');return}const lengthInput=prompt('Contract length for '+p.name+' (2–5 seasons):','3');if(lengthInput===null)return;const years=Number(lengthInput.trim());if(!Number.isInteger(years)||years<2||years>5){alert('Please choose a whole number between 2 and 5 seasons.');return}if(!confirm(p.name+' accepts '+pounds(offer)+'/week for '+years+' seasons. Confirm contract?'))return;p.wage=offer;p.contractUntil=tlSeason()+years;squadSave();renderContracts()}
 const tlOldShowExtra=showExtra;
 showExtra=function(id){document.getElementById('contractsScreen').style.display='none';tlOldShowExtra(id)};
 const tlOldDashboard=openDashboard;
@@ -1347,7 +1347,7 @@ function tlClubStrength(name){
    let value=p.rating||60;
    if(typeof tlAvailable==='function'&&!tlAvailable(p))value-=18;
    const slot=slots[i]&&slots[i].p;
-   if(slot&&p.pos!==slot){
+   if(slot&&p.pos!==slot&&!(p.pos==='AMC'&&slot==='MC')){
     if((p.pos==='GK')!==(slot==='GK'))value-=25;
     else value-=5;
    }
@@ -1364,10 +1364,10 @@ function tlClubStrength(name){
 }
 function tlExpectedGoals(attack,defence,home,mentality){
  const gap=attack-defence;
- let expected=1.25+gap*.11+(home?.23:-.12);
+ let expected=1.25+gap*.155+(home?.23:-.12);
  if(mentality==='Attacking')expected+=.22;
  if(mentality==='Defensive')expected-=.18;
- return Math.max(.22,Math.min(4.2,expected));
+ return Math.max(.18,Math.min(4.1,expected));
 }
 function tlPoissonGoals(expected){
  // Knuth's Poisson sampler: strong teams tend to score more, but upsets remain possible.
@@ -1662,7 +1662,7 @@ function tlScoutOpponent(){
 function tlScoutOurStrength(){
  const xi=squadPlayers.slice(0,11),slots=squadLayouts[squadFormationIndex];
  if(!xi.length)return 65;
- return xi.reduce((sum,p,i)=>{let v=p.rating||60;if(typeof tlAvailable==='function'&&!tlAvailable(p))v-=18;const slot=slots[i]?.p;if(slot&&p.pos!==slot)v-=((p.pos==='GK')!==(slot==='GK'))?25:5;return sum+v},0)/xi.length;
+ return xi.reduce((sum,p,i)=>{let v=p.rating||60;if(typeof tlAvailable==='function'&&!tlAvailable(p))v-=18;const slot=slots[i]?.p;if(slot&&p.pos!==slot&&!(p.pos==='AMC'&&slot==='MC'))v-=((p.pos==='GK')!==(slot==='GK'))?25:5;return sum+v},0)/xi.length;
 }
 function tlScoutAdvice(ours,theirs){
  const gap=ours-theirs;
@@ -1896,7 +1896,7 @@ function tlCupFixtureScore(f){
  const hm=f.home.name===mine?tacticMentality:'Balanced',am=f.away.name===mine?tacticMentality:'Balanced';
  let hg=tlPoissonGoals(tlExpectedGoals(h,a,true,hm)),ag=tlPoissonGoals(tlExpectedGoals(a,h,false,am));
  if(hg===ag){ // Cup ties always produce a winner, using extra time / penalties.
-  const chance=Math.max(.12,Math.min(.88,.5+(h-a)*.028));
+  const chance=Math.max(.12,Math.min(.88,.5+(h-a)*.018));
   const homeWins=Math.random()<chance;
   return {hg,ag,winner:homeWins?f.home:f.away,penalties:true};
  }
@@ -2195,5 +2195,431 @@ openFinances=function(){
  }
 };
 </script>
+
+<script>
+// Expanded, deterministic player name pool. Avoid numbered duplicate names in new markets.
+const tlNameFirst=['Aaron','Aiden','Alex','Alistair','Andrew','Anthony','Ashton','Bailey','Ben','Blake','Bradley','Brandon','Cameron','Carl','Carter','Connor','Corey','Darren','Declan','Dominic','Edward','Elliot','Emerson','Eric','Evan','Fabian','Frankie','Gabriel','Gareth','Gavin','Harry','Harrison','Hayden','Hudson','Hugh','Ian','Jack','Jackson','James','Jasper','Joel','Jonah','Jordan','Joseph','Joshua','Kieran','Kyle','Landon','Laurence','Leon','Lewis','Liam','Louis','Lucas','Marcus','Martin','Matthew','Miles','Mitchell','Morgan','Niall','Nico','Oliver','Owen','Patrick','Peter','Rhys','Richard','Riley','Robert','Ronan','Ross','Ryan','Scott','Sean','Sebastian','Simon','Sonny','Stanley','Stephen','Taylor','Thomas','Timothy','Tristan','Tyler','Victor','William','Zachary'];
+const tlNameLast=['Abbott','Adams','Armstrong','Atkinson','Austin','Bailey','Barrett','Barton','Beck','Bell','Benson','Black','Bolton','Bradshaw','Briggs','Brown','Burke','Burns','Burton','Butler','Campbell','Chambers','Chapman','Clark','Clarke','Collins','Cook','Cooper','Cox','Crawford','Davies','Dixon','Doyle','Dunn','Edwards','Evans','Field','Fleming','Foster','Francis','Gardner','Gibson','Gordon','Graham','Grant','Gray','Green','Griffin','Hall','Hamilton','Harris','Harrison','Harvey','Henderson','Hill','Holland','Holmes','Howard','Hudson','Hunt','Hunter','Jackson','James','Jenkins','Johnson','Jones','Kelly','Kennedy','King','Lawrence','Lee','Lewis','Lloyd','Long','Lowe','Marshall','Martin','Mason','Matthews','May','McCarthy','Miller','Mitchell','Moore','Morgan','Morris','Murphy','Murray','Nelson','Newman','Nicholls','Norris','Owen','Page','Parker','Patel','Pearson','Phillips','Powell','Price','Reynolds','Richards','Richardson','Roberts','Robinson','Rogers','Rose','Russell','Saunders','Shaw','Simpson','Smith','Spencer','Stevens','Stewart','Sullivan','Taylor','Thomas','Thompson','Turner','Walker','Wallace','Walsh','Ward','Watson','Webb','West','White','Williams','Wilson','Wood','Wright','Young'];
+function tlFreshDistinctName(seed,used){
+ let i=0,name='';
+ do{const n=(seed*37+i*97)>>>0;name=tlNameFirst[n%tlNameFirst.length]+' '+tlNameLast[(Math.floor(n/tlNameFirst.length)+i*19)%tlNameLast.length];i++}while(used.has(name.toLowerCase())&&i<10000);
+ used.add(name.toLowerCase());return name;
+}
+const tlNamesBeforeLoad=squadLoad;
+squadLoad=function(){
+ tlNamesBeforeLoad();
+ const used=new Set(),all=new Set(squadPlayers.map(p=>String(p.name||'').toLowerCase()));let changed=false;
+ for(const p of squadPlayers){
+  const key=String(p.name||'').toLowerCase();
+  if(key&&!used.has(key)){used.add(key);continue}
+  const newName=tlFreshDistinctName((Number(p.id)||0)+squadPlayers.indexOf(p)*101+tlSeason()*791,new Set([...all,...used]));
+  p.name=newName;used.add(newName.toLowerCase());all.add(newName.toLowerCase());changed=true;
+ }
+ if(changed)squadSave();
+};
+// Existing bought-player IDs and cached transfer pools are retained.
+const tlNamesBeforeMarket=freshMarket;
+freshMarket=function(windowId){
+ const players=tlNamesBeforeMarket(windowId);
+ const used=new Set();
+ return players.map((p,i)=>({...p,name:tlFreshDistinctName((Number(p.id)||0)+i*53+tlSeason()*791,used)}));
+};
+// Transfer allowance is 65% of current cash balance, rather than a detached pot.
+// Recompute after each financial transaction; never credit money a second time.
+const tlFinanceBeforePercent=financeData;
+financeData=function(){
+ const f=tlFinanceBeforePercent();
+ if(Number.isFinite(f.balance))f.budget=Math.max(0,Math.floor(Math.max(0,f.balance)*.65/1000)*1000);
+ return f;
+};
+const tlStoreBeforePercent=storeFinance;
+storeFinance=function(f){
+ if(Number.isFinite(f.balance))f.budget=Math.max(0,Math.floor(Math.max(0,f.balance)*.65/1000)*1000);
+ tlStoreBeforePercent(f);
+};
+// Additional earned revenue per league fixture: broadcast rights and community partners.
+// Credit once only, alongside the existing matchweek income ledger.
+const tlIncomeBeforeExtras=tlCreditIncome;
+tlCreditIncome=function(weekIndex,wasHome){
+ const entry=tlIncomeBeforeExtras(weekIndex,wasHome);
+ if(!entry)return entry;
+ const d=tlDivision(),broadcast=[9000,36000,230000,1800000][d];
+ const partners=[3500,14000,90000,700000][d];
+ entry.broadcast=broadcast;entry.partners=partners;
+ entry.total+=broadcast+partners;
+ const season=tlSeason(),ledger=tlIncomeData(season);
+ const record=ledger.weeks.find(w=>w.week===weekIndex+1);
+ if(record){record.broadcast=broadcast;record.partners=partners;record.total=entry.total;localStorage.setItem(tlIncomeKey(season),JSON.stringify(ledger))}
+ const f=financeData();f.balance+=broadcast+partners;storeFinance(f);
+ return entry;
+};
+const tlIncomeTotalsBeforeExtras=tlIncomeTotals;
+tlIncomeTotals=function(data){
+ const totals=tlIncomeTotalsBeforeExtras(data);
+ totals.broadcast=(data.weeks||[]).reduce((n,w)=>n+(w.broadcast||0),0);
+ totals.partners=(data.weeks||[]).reduce((n,w)=>n+(w.partners||0),0);
+ return totals;
+};
+const tlFinancesBeforeExtraRevenue=openFinances;
+openFinances=function(){
+ tlFinancesBeforeExtraRevenue();
+ const body=document.getElementById('financeBody');if(!body)return;
+ const t=tlIncomeTotals(tlIncomeData());
+ const block=document.createElement('div');block.className='ex-metric';
+ block.textContent='BROADCAST RIGHTS: '+pounds(t.broadcast)+'  |  COMMUNITY PARTNERS: '+pounds(t.partners);
+ body.appendChild(block);
+ const note=document.createElement('p');note.className='ex-note';note.textContent='Transfer allowance: 65% of available club balance. Income is credited once per completed matchweek.';body.appendChild(note);
+};
+</script>
+<script>
+/* November squad, contract and lower-league balance update. Existing career keys remain unchanged. */
+function tlNewAcademyName(seed){
+ const used=new Set(squadPlayers.map(p=>String(p.name||'').toLowerCase()));
+ return tlFreshDistinctName(seed+tlSeason()*1577,used);
+}
+function tlNewEmergencyKeeper(label){
+ const season=tlSeason(),d=tlDivision(),rating=Math.max(58,Math.min(76,62+d*4));
+ return {id:'emergency-gk-'+season+'-'+Math.random().toString(36).slice(2,9),name:tlNewAcademyName(Math.floor(Math.random()*1000000)),pos:'GK',age:19+tlRand(0,4),rating,wage:tlWage(rating,d),contractUntil:season+2,injury:0,ban:0,yellows:0,seasonApps:0,seasonGoals:0,careerApps:0,careerGoals:0,emergencyKeeper:true};
+}
+function tlKeeperSafety(){
+ let changed=false;
+ const used=new Set();
+ for(let i=0;i<squadPlayers.length;i++){
+  const p=squadPlayers[i];
+  if(/^Academy\s+(GK|DC|DL|DR|MC|ML|MR|AMC|ST)(?:\s|$)/i.test(String(p.name||''))){
+   p.name=tlNewAcademyName(i*991+Number(p.rating||60)*37);changed=true;
+  }
+  if(used.has(String(p.name).toLowerCase())){p.name=tlNewAcademyName(i*719+123);changed=true;}
+  used.add(String(p.name).toLowerCase());
+ }
+ let gks=squadPlayers.filter(p=>p.pos==='GK');
+ while(gks.length<2 && squadPlayers.length<25){const g=tlNewEmergencyKeeper();squadPlayers.push(g);gks.push(g);changed=true;}
+ // A full squad is preserved: release no existing players automatically.
+ if(changed)squadSave();
+ return gks.length>=2;
+}
+const tlSafeSquadLoad=squadLoad;
+squadLoad=function(){tlSafeSquadLoad();tlKeeperSafety()};
+const tlSafeSquadAuto=squadAutoSelect;
+squadAutoSelect=function(){
+ tlKeeperSafety();
+ const fitKeepers=squadPlayers.filter(p=>p.pos==='GK'&&tlAvailable(p));
+ if(!fitKeepers.length&&squadPlayers.length<25){
+  const g=tlNewEmergencyKeeper();g.emergencyLoan=true;g.contractUntil=tlSeason()+1;squadPlayers.push(g);squadSave();
+  squadStatus.textContent='Emergency goalkeeper loan added';
+ }
+ tlSafeSquadAuto();
+};
+const tlSafeTransfer=doTransfer;
+doTransfer=function(p){
+ if(transferTab==='sell'&&p.pos==='GK'&&squadPlayers.filter(g=>g.pos==='GK').length<=2){alert('Every club must retain at least two goalkeepers. Sign a replacement before selling this player.');return;}
+ tlSafeTransfer(p);
+};
+const tlSafeConfirm=squadConfirm;
+squadConfirm=function(){
+ tlKeeperSafety();
+ const keepers=squadPlayers.filter(p=>p.pos==='GK');
+ if(keepers.length<2){squadStatus.textContent='Two goalkeepers required: make a squad space for an academy goalkeeper';return;}
+ if(squadPlayers[0]?.pos!=='GK'||!tlAvailable(squadPlayers[0])){squadStatus.textContent='Select an available goalkeeper before confirming';squadRender();return;}
+ tlSafeConfirm();
+};
+// In a 25-player squad, allow temporary goalkeeper cover without losing a player:
+// the unavailable keeper remains registered, and the match uses a one-match clearance.
+const tlSafePlay=playInstantMatch;
+playInstantMatch=function(){
+ squadLoad();
+ const fit=squadPlayers.filter(p=>p.pos==='GK'&&tlAvailable(p));
+ if(!fit.length&&squadPlayers.length>=25){
+  const keeper=squadPlayers.find(p=>p.pos==='GK');
+  if(keeper){keeper.ban=0;keeper.injury=0;squadSave();alert('Emergency goalkeeper dispensation granted for this match.');}
+ }
+ tlSafePlay();
+};
+// Stable, rating-sensitive negotiations with 2–5-season choices.
+function tlContractDemand(p,years){
+ const wage=Math.max(175,Number(p.wage)||tlWage(p.rating,tlDivision()));
+ const previous=Number.isFinite(p.renewalRating)?p.renewalRating:Number(p.rating);
+ const delta=Number(p.rating)-previous;
+ let pct=delta>=2?.055:delta>0?.035:delta<=-2?-.045:.015;
+ if(p.age>=33)pct=Math.min(pct,-.075);
+ else if(p.age>=30)pct=Math.min(pct,0);
+ if(years===4)pct-=.01;
+ if(years===5)pct-=.02;
+ return Math.max(175,Math.round(wage*(1+pct)/25)*25);
+}
+tlNegotiate=function(p){
+ const lengthInput=prompt('Renew '+p.name+': choose contract length (2, 3, 4 or 5 seasons):','3');
+ if(lengthInput===null)return;
+ const years=Number(lengthInput.trim());
+ if(!Number.isInteger(years)||years<2||years>5){alert('Choose a whole number from 2 to 5.');return;}
+ const demand=tlContractDemand(p,years);
+ const input=prompt(p.name+' requests '+pounds(demand)+'/week for '+years+' seasons. Enter weekly wage offer (£):',String(demand));
+ if(input===null)return;
+ const offer=Math.round(Number(input));
+ if(!Number.isFinite(offer)||offer<=0){alert('Enter a valid weekly wage.');return;}
+ if(offer<demand){alert(p.name+' rejected the offer and countered at '+pounds(demand)+'/week.');return;}
+ if(offer>tlWageBudget()-tlWeeklyWages()+p.wage){alert('This offer exceeds your wage budget.');return;}
+ if(!confirm(p.name+' accepts '+pounds(offer)+'/week for '+years+' seasons. Confirm?'))return;
+ p.wage=offer;p.contractUntil=tlSeason()+years;p.renewalRating=p.rating;squadSave();renderContracts();
+};
+// Additional modest lower-division matchday/commercial support, credited only once
+// after the existing income ledger successfully records a new matchweek.
+const tlBalancedCredit=tlCreditIncome;
+tlCreditIncome=function(weekIndex,wasHome){
+ const entry=tlBalancedCredit(weekIndex,wasHome);
+ if(!entry)return entry;
+ const d=tlDivision();
+ const support=[12500,25000,0,0][d];
+ const matchday=wasHome?[11000,24000,0,0][d]:0;
+ const extra=support+matchday;
+ if(extra){
+  const ledger=tlIncomeData(),record=ledger.weeks.find(w=>w.week===weekIndex+1);
+  if(record){record.regionalSupport=support;record.matchdayBonus=matchday;record.total+=extra;localStorage.setItem(tlIncomeKey(tlSeason()),JSON.stringify(ledger));}
+  entry.regionalSupport=support;entry.matchdayBonus=matchday;entry.total+=extra;
+  const f=financeData();f.balance+=extra;storeFinance(f);
+ }
+ return entry;
+};
+const tlBalancedFinances=openFinances;
+openFinances=function(){
+ tlBalancedFinances();
+ const body=document.getElementById('financeBody');if(!body)return;
+ const weeks=tlIncomeData().weeks||[];
+ const support=weeks.reduce((n,w)=>n+(w.regionalSupport||0)+(w.matchdayBonus||0),0);
+ const note=document.createElement('div');note.className='ex-metric';note.textContent='LOWER-LEAGUE SUPPORT & MATCHDAY BONUSES: '+pounds(support);body.appendChild(note);
+};
+// Ensure academy replacement players generated at the season change receive names.
+const tlSafeAdvance=advanceSeason;
+advanceSeason=function(){tlSafeAdvance();squadLoad();};
+</script>
+
+<style>
+/* Career navigation: separate from the eight existing dashboard actions. */
+.tl-quit-career{position:absolute;left:2.5%;top:3%;width:17%;height:9%;z-index:15;border:2px solid #ffd15b;border-radius:15px;background:linear-gradient(#2567b9,#092651);color:#fff;font:bold clamp(10px,1.45vw,20px) Arial,sans-serif;text-shadow:1px 1px #00112a;cursor:pointer}
+.tl-quit-career:focus-visible{outline:3px solid #fff;outline-offset:2px}
+</style>
+<script>
+(function(){
+ const board=document.getElementById('dashboardBoard');
+ if(!board||document.getElementById('tlQuitCareer'))return;
+ const button=document.createElement('button');
+ button.type='button';button.id='tlQuitCareer';button.className='tl-quit-career';
+ button.textContent='QUIT CAREER';
+ button.setAttribute('aria-label','Quit career and return to main menu');
+ button.onclick=function(){
+  if(!confirm('Return to the main menu? Your current career will be kept so you can continue later.'))return;
+  try{squadLoad();}catch(e){} // discard unconfirmed squad changes
+  document.querySelectorAll('.screen').forEach(function(el){el.style.display='none'});
+  document.getElementById('menu').style.display='flex';
+ };
+ board.appendChild(button);
+})();
+</script>
+<style>
+/* Four independent career save slots, presented over the existing office art. */
+#tlCareerSlots{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:#031128e8;color:#fff;font-family:Arial,sans-serif}
+#tlCareerSlots .tl-slot-panel{width:min(92vw,850px);max-height:90dvh;overflow:auto;border:3px solid #f5c849;border-radius:22px;background:linear-gradient(#17488b,#071d46);padding:22px;box-shadow:0 10px 50px #0009}
+#tlCareerSlots h2{margin:0 0 8px;text-align:center;font-size:clamp(20px,3vw,32px)}
+#tlCareerSlots p{text-align:center;color:#ffde82;margin:0 0 14px}
+.tl-slot-row{display:flex;align-items:center;gap:12px;border:1px solid #6791c9;border-radius:12px;background:#12366c;margin:8px 0;padding:12px}
+.tl-slot-info{flex:1;min-width:0}.tl-slot-info b{display:block;font-size:clamp(15px,2vw,21px)}.tl-slot-info small{display:block;margin-top:5px;color:#d1e5ff;font-size:clamp(11px,1.3vw,15px)}
+.tl-slot-row button,#tlSlotsClose{background:linear-gradient(#2870ca,#082b6b);border:2px solid #f7cb51;border-radius:10px;padding:10px 15px;color:white;font-weight:bold;cursor:pointer;font-size:clamp(12px,1.5vw,17px)}
+#tlSlotsClose{display:block;margin:16px auto 0;min-width:150px}
+@media(max-width:550px){.tl-slot-row{flex-wrap:wrap}.tl-slot-row button{flex:1}}
+</style>
+<div id="tlCareerSlots" role="dialog" aria-modal="true" aria-label="Career save slots"><div class="tl-slot-panel"><h2 id="tlSlotsHeading">CONTINUE CAREER</h2><p id="tlSlotsNote">Choose a saved career</p><div id="tlSlotsList"></div><button id="tlSlotsClose" type="button">BACK</button></div></div>
+<script>
+// Independent full-career snapshots: each slot holds every game-owned localStorage
+// key, not just the club name. Slot metadata deliberately uses a different prefix.
+(function(){
+ const PREFIX='TL4CareerSlot_', ACTIVE='TL4CareerActive';
+ const slotKey=i=>PREFIX+i;
+ const read=i=>{try{return JSON.parse(localStorage.getItem(slotKey(i))||'null')}catch(e){return null}};
+ const getActive=()=>{const i=Number(localStorage.getItem(ACTIVE));return Number.isInteger(i)&&i>=1&&i<=4?i:0};
+ const allKeys=()=>{const keys=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k==='touchlineCareer'||k.startsWith('touchline')))keys.push(k)}return keys};
+ const capture=()=>{const data={};for(const k of allKeys())data[k]=localStorage.getItem(k);return data};
+ const clear=()=>{for(const k of allKeys())localStorage.removeItem(k)};
+ const careerInfo=data=>{try{return JSON.parse(data?.touchlineCareer||'null')}catch(e){return null}};
+ const persist=()=>{
+  const i=getActive(),data=capture(),career=careerInfo(data);
+  if(!i||!career)return;
+  const old=read(i),name=old?.name||career.manager+' – '+career.club;
+  try{localStorage.setItem(slotKey(i),JSON.stringify({name,updated:new Date().toISOString(),data}))}
+  catch(e){alert('Career save storage is full. Your active game remains available, but this slot could not be saved.');}
+ };
+ const resetRuntime=()=>{
+  teams.splice(0,teams.length,...tlInitialClubs);
+  leagueMatches=JSON.parse(JSON.stringify(initialSchedule));fixtureWeek=0;
+  squadFormationIndex=0;squadSelected=-1;
+  squadPlayers=squadNames.map((p,i)=>({id:i,name:p[0],pos:p[1],age:p[2],rating:p[3]}));
+  tacticMentality='Balanced';tacticFlags=[false,false,false,false,false];
+  tlReportSnapshot=null;tlReportCompleted=false;
+  chosenClub=-1;pendingClub=-1;tlCustomClubName='';
+ };
+ const restore=i=>{
+  const slot=read(i);if(!slot?.data||!careerInfo(slot.data)){alert('This career cannot be loaded.');return false}
+  persist();clear();
+  for(const [k,v] of Object.entries(slot.data))localStorage.setItem(k,v);
+  localStorage.setItem(ACTIVE,String(i));resetRuntime();
+  const career=careerInfo(slot.data);
+  if(career?.customClub){const index=tlInitialClubs.length-1;teams[index]=career.club}
+  try{seasonTeams();tlRestoreCustomClub();squadLoad()}catch(e){console.warn('Career restore:',e)}
+  return true;
+ };
+ // First installation: migrate the existing single-career save into Slot 1.
+ if(!getActive()&&localStorage.getItem('touchlineCareer')){
+  const data=capture(),c=careerInfo(data);
+  if(c){try{localStorage.setItem(slotKey(1),JSON.stringify({name:c.manager+' – '+c.club,updated:new Date().toISOString(),data}));localStorage.setItem(ACTIVE,'1')}catch(e){console.warn('Unable to migrate career:',e)}}
+ }
+ const overlay=document.getElementById('tlCareerSlots'),list=document.getElementById('tlSlotsList');
+ let mode='continue';
+ const hide=()=>{overlay.style.display='none'};
+ document.getElementById('tlSlotsClose').onclick=hide;
+ function show(m){
+  mode=m;persist();list.replaceChildren();
+  document.getElementById('tlSlotsHeading').textContent=m==='continue'?'CONTINUE CAREER':'NEW CAREER';
+  document.getElementById('tlSlotsNote').textContent=m==='continue'?'Select a career to continue':'Select an empty slot or replace an existing career';
+  for(let i=1;i<=4;i++){
+   const slot=read(i),c=careerInfo(slot?.data),row=document.createElement('div');row.className='tl-slot-row';
+   const info=document.createElement('div');info.className='tl-slot-info';
+   const title=document.createElement('b');title.textContent='SLOT '+i+' · '+(slot?.name||'EMPTY');
+   const details=document.createElement('small');details.textContent=c?'Manager: '+c.manager+' | Club: '+c.club:'Available for a new career';
+   info.append(title,details);row.appendChild(info);
+   const button=document.createElement('button');button.textContent=m==='continue'?'CONTINUE':slot?'REPLACE':'CREATE';
+   button.disabled=m==='continue'&&!c;
+   button.onclick=()=>{
+    if(m==='continue'){
+     if(!restore(i))return;hide();openDashboard();return;
+    }
+    if(slot&&!confirm('Replace Slot '+i+' ('+slot.name+')? This permanently overwrites that saved career.'))return;
+    persist();
+    // Do not delete a replaced slot until a new career has actually been created.
+    sessionStorage.setItem('TL4PendingSlot',String(i));
+    hide();resetRuntime();document.getElementById('managerName').value='';
+    screen('career');
+   };
+   row.appendChild(button);
+   if(slot){
+    const rename=document.createElement('button');rename.textContent='RENAME';rename.onclick=()=>{
+     const name=prompt('Name for Slot '+i+':',slot.name);
+     if(name===null)return;
+     const trimmed=name.trim().slice(0,40);if(!trimmed)return;
+     slot.name=trimmed;localStorage.setItem(slotKey(i),JSON.stringify(slot));show(mode);
+    };row.appendChild(rename);
+   }
+   list.appendChild(row);
+  }
+  overlay.style.display='flex';
+ }
+ // Override the legacy one-career deletion logic with a safe four-slot creation.
+ startCareer=function(){
+  const i=Number(sessionStorage.getItem('TL4PendingSlot'));
+  if(!(i>=1&&i<=4)){show('new');return}
+  const manager=document.getElementById('managerName').value.trim();
+  if(!manager||chosenClub<0){alert(!manager?'Please enter your manager name.':'Please choose your club.');return}
+  const custom=!!tlCustomClubName,club=custom?tlCustomClubName:teams[chosenClub];
+  persist();clear();
+  // A new career starts with fresh runtime state, but preserves the chosen club.
+  const selected=chosenClub,customName=tlCustomClubName;
+  resetRuntime();chosenClub=selected;pendingClub=selected;tlCustomClubName=customName;
+  if(custom)teams[selected]=customName;
+  // The new career must always have its club in the twelve-team fixture list.
+  // An older career may have left the shared teams array on a promoted division.
+  if(!teams.includes(club))teams[selected]=club;
+  localStorage.setItem('touchlineCareer',JSON.stringify({manager,club,customClub:custom}));
+  leagueMatches=JSON.parse(JSON.stringify(makeSchedule()));
+  saveMatches();
+  localStorage.setItem(ACTIVE,String(i));
+  const old=read(i);
+  const label=old?.name&&old?.data?.touchlineCareer===undefined?old.name:manager+' – '+club;
+  try{localStorage.setItem(slotKey(i),JSON.stringify({name:label,updated:new Date().toISOString(),data:capture()}))}catch(e){console.warn('Slot save:',e)}
+  sessionStorage.removeItem('TL4PendingSlot');openDashboard();persist();
+ };
+ continueCareer=function(){show('continue')};
+ openCareer=function(){show('new')};
+ // Update the existing quit button to persist before returning to the office.
+ const quit=document.getElementById('tlQuitCareer');
+ if(quit)quit.onclick=function(){
+  if(!confirm('Return to the main menu? Your current career will be saved.'))return;
+  persist();try{squadLoad()}catch(e){}
+  document.querySelectorAll('.screen').forEach(el=>el.style.display='none');
+  document.getElementById('menu').style.display='flex';
+ };
+ // Auto-save the active slot when leaving or hiding the app; regular game
+ // operations still use their existing save keys, preserving compatibility.
+ window.addEventListener('pagehide',persist);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persist()});
+ const originalSave=saveCareerNow;
+ saveCareerNow=function(){originalSave();persist()};
+ // Ensure the last active slot is up to date when a player uses the dashboard.
+ const originalDashboard=openDashboard;
+ openDashboard=function(){originalDashboard();persist()};
+})();
+</script>
+
+
+<script>
+// Guard newly created careers against a fixture/club mismatch after switching slots.
+const tlFourSlotsNextMatch=openNextMatch;
+openNextMatch=function(){
+ const club=careerClub();
+ if(club){
+  loadMatches();
+  const week=currentWeek();
+  if(week>=0&&(!leagueMatches[week]||!leagueMatches[week].some(m=>teams[m.home]===club||teams[m.away]===club))){
+   const st=careerSeason();
+   if(st.number===1){
+    teams.splice(0,teams.length,...tlInitialClubs);
+    if(!teams.includes(club))teams[11]=club;
+   }else if(Array.isArray(st.clubs)&&st.clubs.length===12){
+    teams.splice(0,teams.length,...st.clubs);
+   }
+   loadMatches();
+  }
+ }
+ return tlFourSlotsNextMatch();
+};
+</script>
+
+
+<script>
+// Name repair v2: remove numeric duplicate suffixes from existing saved squads,
+// and never introduce them when buying players. IDs, ratings and contracts stay intact.
+function tlNameRepair(){
+ const taken=new Set(squadPlayers.map(p=>String(p.name||'').trim().toLowerCase()));
+ const seen=new Set();let changed=false;
+ for(let i=0;i<squadPlayers.length;i++){
+  const p=squadPlayers[i];
+  const current=String(p.name||'').trim();
+  const base=current.replace(/\s+([2-9]|[1-9][0-9]+)$/,'').trim();
+  const key=current.toLowerCase();
+  const needsReplacement=!current||base!==current||seen.has(key);
+  if(!needsReplacement){seen.add(key);continue;}
+  // Keep the first original name and replace each numbered/duplicated name.
+  const seed=(i+1)*1009+String(p.id??'').split('').reduce((n,c)=>n+c.charCodeAt(0),0)*17;
+  const name=tlFreshDistinctName(seed,taken);
+  p.name=name;seen.add(name.toLowerCase());changed=true;
+ }
+ return changed;
+}
+const tlNameRepairLoad=squadLoad;
+squadLoad=function(){
+ tlNameRepairLoad();
+ if(tlNameRepair())squadSave();
+};
+const tlNameRepairTransfer=doTransfer;
+doTransfer=function(p){
+ if(transferTab==='buy'){
+  const taken=new Set(squadPlayers.map(x=>String(x.name||'').toLowerCase()));
+  const candidate=String(p.name||'').trim();
+  if(!candidate||/\s+\d+$/.test(candidate)||taken.has(candidate.toLowerCase())){
+   const seed=String(p.id??'').split('').reduce((n,c)=>n*31+c.charCodeAt(0),7);
+   p={...p,name:tlFreshDistinctName(seed,taken)};
+  }
+ }
+ return tlNameRepairTransfer(p);
+};
+</script>
+
 </body>
 </html>
