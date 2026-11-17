@@ -3323,23 +3323,23 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
 .tlms-score{position:absolute;left:8%;top:13%;width:84%;height:5%;text-align:center;font-size:1.55cqw;font-weight:900;color:#ffe17d}
 .tlms-panel{position:absolute;top:20%;height:60%;border:2px solid #ffd14d;border-radius:13px;background:linear-gradient(#16488e,#071b44);padding:.8%;overflow:hidden}
 .tlms-left{left:2%;width:45%}.tlms-right{left:48%;width:30%}.tlms-tactics{left:79%;width:19%}
-.tlms-label{height:8%;text-align:center;color:#ffe17d;font-size:1.3cqw;font-weight:900}
-.tlms-cols,.tlms-player{display:grid;grid-template-columns:44% 13% 13% 16% 14%;align-items:center;text-align:center}
-.tlms-cols{height:7%;color:#ffe17d;font-size:.94cqw;font-weight:900}
-.tlms-player{width:100%;height:7.65%;border:0;border-bottom:1px solid #ffffff35;background:#22569c;color:white;font-size:1.02cqw;cursor:pointer;padding:0 1%}
+.tlms-label{height:8%;text-align:center;color:#ffe17d;font-size:1.48cqw;font-weight:900}
+.tlms-cols,.tlms-player{display:grid;grid-template-columns:43% 12% 12% 16% 17%;align-items:center;text-align:center}
+.tlms-cols{height:7%;color:#ffe17d;font-size:1.12cqw;font-weight:900}
+.tlms-player{width:100%;height:7.65%;border:0;border-bottom:1px solid #ffffff35;background:#22569c;color:white;font-size:1.18cqw;font-weight:700;cursor:pointer;padding:0 1%}
 .tlms-player:nth-child(even){background:#163d78}.tlms-player.selected{background:#e8bc43;color:#06152a;font-weight:900;outline:2px solid #fff}
 .tlms-player span:first-child{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tlms-right .tlms-player{height:11.5%;font-size:.98cqw}.tlms-player:disabled{opacity:.4;cursor:not-allowed}
-.tlms-tactics label{display:block;color:#ffe17d;font-size:1.1cqw;font-weight:900;margin:6% 0 2%}
-.tlms-tactics select{width:100%;font-size:1.15cqw;background:#205da9;color:#fff;border:2px solid #ffd14d;border-radius:8px;padding:5% 2%}
-.tlms-tactics .tlms-tip{font-size:1.04cqw;line-height:1.4;margin-top:8%;color:#d9eaff}
-.tlms-info{position:absolute;top:81%;left:3%;width:94%;text-align:center;color:#ffe17d;font-size:1.15cqw;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlms-right .tlms-player{height:11.5%;font-size:1.10cqw}.tlms-player:disabled{opacity:.4;cursor:not-allowed}
+.tlms-tactics label{display:block;color:#ffe17d;font-size:1.22cqw;font-weight:900;margin:6% 0 2%}
+.tlms-tactics select{width:100%;font-size:1.25cqw;background:#205da9;color:#fff;border:2px solid #ffd14d;border-radius:8px;padding:5% 2%}
+.tlms-tactics .tlms-tip{font-size:1.12cqw;line-height:1.4;margin-top:8%;color:#d9eaff}
+.tlms-info{position:absolute;top:81%;left:3%;width:94%;text-align:center;color:#ffe17d;font-size:1.28cqw;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tlms-footer{position:absolute;bottom:2%;left:3%;width:94%;height:11%;display:flex;gap:2%}
 .tlms-footer button{flex:1;border:3px solid #ffd14d;border-radius:15px;background:linear-gradient(#236bc5,#08285e);color:white;font-size:1.45cqw;font-weight:900;cursor:pointer}.tlms-footer button:nth-child(2){background:linear-gradient(#d9a22c,#835309)}.tlms-footer button:last-child{background:linear-gradient(#17a53c,#075522)}
 </style>
 <section id="tlMatchSquad" class="screen"><div class="tlms-art">
 <div class="tlms-heading">MATCHDAY COMMAND CENTRE</div><div class="tlms-score" id="tlmsScore"></div>
-<div class="tlms-panel tlms-left"><div class="tlms-label">ON THE PITCH · STARTING XI</div><div class="tlms-cols"><span>PLAYER</span><span>POS</span><span>OVR</span><span>GAME</span><span>STATUS</span></div><div id="tlmsXI"></div></div>
+<div class="tlms-panel tlms-left"><div class="tlms-label">ON THE PITCH · CURRENT XI</div><div class="tlms-cols"><span>PLAYER</span><span>POS</span><span>OVR</span><span>GAME</span><span>STATUS</span></div><div id="tlmsXI"></div></div>
 <div class="tlms-panel tlms-right"><div class="tlms-label">SUBSTITUTES</div><div class="tlms-cols"><span>PLAYER</span><span>POS</span><span>OVR</span><span>GAME</span><span>STATUS</span></div><div id="tlmsBench"></div></div>
 <div class="tlms-panel tlms-tactics"><div class="tlms-label">TACTICS</div><label for="tlmsFormation">FORMATION</label><select id="tlmsFormation" onchange="tlqSetFormation(this.value);tlmsSync()"><option>4-4-2</option><option>4-3-3</option><option>3-5-2</option></select><label for="tlmsMentality">MENTALITY</label><select id="tlmsMentality" onchange="tlqSetMentality(this.value);tlmsSync()"><option>Balanced</option><option>Attacking</option><option>Defensive</option></select><div class="tlms-tip">Select one player on the pitch and one on the bench. Yellow highlights show your choices.<p>GAME is the live performance rating out of 10. OVR is the player's overall ability.</p></div></div>
 <div class="tlms-info" id="tlmsInfo" aria-live="polite"></div><div class="tlms-footer"><button onclick="tlqReturnSquad()">BACK TO COMMENTARY</button><button onclick="tlqConfirmSub()">CONFIRM SUBSTITUTION</button><button onclick="tlqReturnSquad()">RETURN TO MATCH</button></div>
@@ -3450,7 +3450,28 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   squadPlayers=ordered;squadSave();
   const sim=tlSimulateFixture;
   tlSimulateFixture=function(f,w){if(w===m.week&&f.home===m.homeId&&f.away===m.awayId)return [m.h,m.a];return sim(f,w)};
-  try{originalPlay()}finally{tlSimulateFixture=sim}
+  // Include the original starters and every substitute who actually came on.
+  // Keep the existing settlement ratings for players finishing the match.
+  const participants=[...m.original.slice(0,11),...m.used.map(id=>m.original.find(p=>String(p.id)===String(id))).filter(Boolean)];
+  const actualIds=new Set(participants.map(p=>String(p.id)));
+  const extendRatings=rows=>{
+   const out=(rows||[]).map(r=>({...r}));
+   const included=new Set(out.map(r=>String(r.id)));
+   for(const p of participants){
+    if(included.has(String(p.id)))continue;
+    out.push({id:p.id,name:p.name,rating:Number(m.ratings[String(p.id)]??6.5)});
+    included.add(String(p.id));
+   }
+   return out.filter(r=>actualIds.has(String(r.id)));
+  };
+  const savedRatingsLine=tlRatingsLine,savedStoreRatings=tlStoreRatings;
+  tlRatingsLine=function(rows,scorers){return savedRatingsLine(extendRatings(rows),scorers,participants)};
+  tlStoreRatings=function(rows){return savedStoreRatings(extendRatings(rows))};
+  try{originalPlay()}finally{
+   tlSimulateFixture=sim;
+   tlRatingsLine=savedRatingsLine;
+   tlStoreRatings=savedStoreRatings;
+  }
   const box=$('resultsBody');if(box){const rating=document.createElement('div');rating.style.cssText='font-size:1.2cqw;color:#ffe17d;margin-top:1%';rating.textContent='MATCH RATINGS: '+m.lineup.map(p=>p.name+' '+(m.ratings[String(p.id)]??6.5).toFixed(1)).join(' · ');box.appendChild(rating)}
   // Restore the original squad order, retaining every updated player statistic,
   // injury, suspension, contract and other field from the settled match.
