@@ -3017,22 +3017,43 @@ tlCupPlay=function(){
  }
  if(!before&&cup.champion===careerClub()&&tlRegisterHonour(kind,seasonLabel()))window.tlPendingCupVictory={kind,season:seasonLabel()};
 };
-/* Ratings-based annual award, with a separate top scorer. Existing awards remain intact. */
+/* Annual award: sustained performances across league and cup matches. */
+function tlAwardEligiblePlayers(players,data){
+ const season=seasonLabel();
+ const matches=(data.matches||[]).filter(m=>m.season===season);
+ // League has 22 fixtures; cup fixtures increase the participation threshold.
+ const fixtureCount=Math.max(22,new Set(matches.map(m=>m.id)).size);
+ const minimum=Math.ceil(fixtureCount*.70);
+ const eligible=players.filter(p=>(p.seasonApps||0)>=minimum);
+ // If unusual squad turnover leaves nobody eligible, use the most-used players.
+ if(eligible.length)return eligible;
+ const most=Math.max(0,...players.map(p=>p.seasonApps||0));
+ return players.filter(p=>most>0&&(p.seasonApps||0)===most);
+}
+function tlAwardAverage(p,ratings){
+ const row=ratings[String(p.id)+'|'+p.name];
+ return row?.apps?row.total/row.apps:6;
+}
 tlPickPlayerOfYear=function(){
  squadLoad();const data=tlReadRecords(),ratings=data.ratings||{};
- return [...squadPlayers].filter(p=>(p.seasonApps||0)>0).sort((a,b)=>{
-  const ar=ratings[String(a.id)+'|'+a.name],br=ratings[String(b.id)+'|'+b.name];
-  const av=ar?.apps?ar.total/ar.apps:6,bv=br?.apps?br.total/br.apps:6;
-  return (bv+Math.min(1,(b.seasonApps||0)/20))-(av+Math.min(1,(a.seasonApps||0)/20))||b.rating-a.rating;
- })[0]||null;
+ return tlAwardEligiblePlayers(squadPlayers,data).sort((a,b)=>
+  tlAwardAverage(b,ratings)-tlAwardAverage(a,ratings)||
+  (b.seasonGoals||0)-(a.seasonGoals||0)||
+  (b.seasonApps||0)-(a.seasonApps||0)||b.rating-a.rating)[0]||null;
 };
 const tlRatingsRecordAward=tlRecordAward;
 tlRecordAward=function(){
  const year=seasonLabel(),awards=tlAwardHistory();if(awards[year])return awards[year];
- const data=tlReadRecords(),ratings=data.ratings||{};squadLoad();const players=squadPlayers.filter(p=>(p.seasonApps||0)>0);if(!players.length)return tlRatingsRecordAward();
- const winner=[...players].sort((a,b)=>{const ar=ratings[String(a.id)+'|'+a.name],br=ratings[String(b.id)+'|'+b.name];const av=ar?.apps?ar.total/ar.apps:6,bv=br?.apps?br.total/br.apps:6;return bv-av||b.seasonApps-a.seasonApps})[0];
+ const data=tlReadRecords(),ratings=data.ratings||{};squadLoad();
+ const players=squadPlayers.filter(p=>(p.seasonApps||0)>0);
+ if(!players.length)return tlRatingsRecordAward();
+ const winner=tlAwardEligiblePlayers(players,data).sort((a,b)=>
+  tlAwardAverage(b,ratings)-tlAwardAverage(a,ratings)||
+  (b.seasonGoals||0)-(a.seasonGoals||0)||
+  (b.seasonApps||0)-(a.seasonApps||0)||b.rating-a.rating)[0];
  const scorer=[...players].sort((a,b)=>(b.seasonGoals||0)-(a.seasonGoals||0)||b.seasonApps-a.seasonApps)[0];
- const row=ratings[String(winner.id)+'|'+winner.name];const award={name:winner.name,goals:winner.seasonGoals||0,appearances:winner.seasonApps||0,rating:row?.apps?Number((row.total/row.apps).toFixed(2)):null,topScorer:scorer.name,topGoals:scorer.seasonGoals||0};
+ const row=ratings[String(winner.id)+'|'+winner.name];
+ const award={name:winner.name,goals:winner.seasonGoals||0,appearances:winner.seasonApps||0,rating:row?.apps?Number((row.total/row.apps).toFixed(2)):null,topScorer:scorer.name,topGoals:scorer.seasonGoals||0};
  awards[year]=award;localStorage.setItem(tlAwardKey(),JSON.stringify(awards));return award;
 };
 const tlRatingsSeasonReview=openSeasonReview;
