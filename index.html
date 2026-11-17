@@ -3201,5 +3201,33 @@ openPlayerStats=function(){tlPreviousPlayerStats();
 })();
 </script>
 
+
+<style>
+/* Verified navigation release 17 Nov: independent screens and iPad scroll. */
+#tlHistoryV2 .tlv2-scroll,#tlPlayerV2 .tlv2-scroll{overflow-y:auto!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain}
+#tlHistoryV2 .tlv2-panel,#tlPlayerV2 .tlv2-panel{min-height:0}
+.tl-release-tag{position:absolute;right:2%;top:2%;font-size:1cqw;color:#ffe08b;pointer-events:none;z-index:12}
+</style>
+<script>
+(function(){
+ const release='HISTORY V3 · 17 NOV';
+ for(const id of ['tlHistoryV2','tlPlayerV2']){
+  const art=document.querySelector('#'+id+' .tlv2-art');
+  if(art){const tag=document.createElement('span');tag.className='tl-release-tag';tag.textContent=release;art.appendChild(tag)}
+ }
+ const board=document.getElementById('dashboardBoard');
+ if(board){
+  const tag=document.createElement('span');tag.className='tl-release-tag';tag.textContent=release;board.appendChild(tag);
+  const old=board.querySelector('button[aria-label="Club history and awards"]');
+  if(old){old.onclick=()=>window.tlOpenHistory();old.setAttribute('aria-label','Club History and Trophy Cabinet')}
+ }
+ // Ensure the latest independent pages are the only visible game screen.
+ const history=window.tlOpenHistory;
+ window.tlOpenHistory=function(){history();tlShowNewScreen('tlHistoryV2')};
+ const stats=window.openPlayerStats;
+ window.openPlayerStats=function(){stats();tlShowNewScreen('tlPlayerV2')};
+})();
+</script>
+
 </body>
 </html>
