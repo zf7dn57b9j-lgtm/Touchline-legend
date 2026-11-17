@@ -3588,7 +3588,7 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
  'use strict';
  const ranks=[{name:'Local Scout',min:40,max:54,wage:400},{name:'Regional Scout',min:55,max:69,wage:1000},{name:'National Scout',min:70,max:84,wage:2500},{name:'International Scout',min:85,max:94,wage:5000},{name:'World-Class Scout',min:95,max:99,wage:8500}];
  const key=()=> 'touchlineScout_'+careerClub();
- function get(){let x=null;try{x=JSON.parse(localStorage.getItem(key())||'null')}catch(e){}return x&&typeof x==='object'?x:{scout:null,report:null,lastReport:-1};}
+ function get(){let x=null;try{x=JSON.parse(localStorage.getItem(key())||'null')}catch(e){}return x&&typeof x==='object'?x:{scout:null,report:null,lastReport:-1,shortlist:[]};}
  function save(x){localStorage.setItem(key(),JSON.stringify(x));}
  function scoutWage(){const x=get();return x.scout?Number(x.scout.wage)||0:0;}
  const oldWages=tlWeeklyWages;
@@ -3597,12 +3597,15 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
  function discover(x,week){
   const scout=x.scout,quality=scout.rating;
   const d=tlDivision(),base=[59,66,74,81][d];
-  // Better scouts improve odds; no scout guarantees elite talent.
-  const luck=Math.random(),bonus=luck<.025?22:luck<.15?13:luck<.43?7:Math.floor(Math.random()*6);
-  const potential=Math.min(99,Math.max(55,base+Math.floor((quality-40)/12)+bonus));
-  const rating=Math.max(55,Math.min(96,base-4+Math.floor(Math.random()*10)));
-  const truePotential=Math.max(rating,potential);
-  const error=Math.max(2,Math.round(21-(quality-40)*.33));
+  // Club level sets the baseline, but scout quality raises both the ceiling
+  // and the chance of finding players above the current squad's strength.
+  const skill=(quality-40)/59;
+  const luck=Math.random();
+  const exceptional=luck < (.015 + skill*.12);
+  const boost=exceptional?14+Math.floor(Math.random()*13):Math.floor(Math.random()*(7+Math.round(skill*13)));
+  const rating=Math.max(55,Math.min(96,base-3+Math.floor(Math.random()*10)+Math.floor(skill*8)+(exceptional?Math.floor(Math.random()*7):0)));
+  const truePotential=Math.min(99,Math.max(rating,base+boost+Math.floor(skill*10)));
+  const error=Math.max(2,Math.round(19-skill*17));
   const low=Math.max(rating,truePotential-error),high=Math.min(99,truePotential+error);
   const first=['Oliver','Jacob','Lewis','Freddie','Archie','Noah','Theo','Harry','Ethan','Sam','Max','Isaac','Luca','George'];
   const last=['Bennett','Fletcher','Cooper','Hart','Morris','Hughes','Price','Reed','Turner','Walsh','Mason','Fox','Bailey','Carter'];
@@ -3610,9 +3613,14 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   const pos=['GK','DC','DR','DL','MC','ML','MR','AMC','ST'][Math.floor(Math.random()*9)];
   const age=16+Math.floor(Math.random()*8);
   x.report={id:'scout-'+tlSeason()+'-'+week+'-'+Math.floor(Math.random()*1e7),name,pos,age,rating,potential:truePotential,low,high,wage:tlWage(rating,tlDivision()),fee:playerPrice({rating,age}),week,season:tlSeason()};
-  x.lastReport=week;save(x);
+  x.lastReport=week;
+  // Auto-shortlist when there is room. Otherwise keep the new report pending
+  // until the manager chooses a player to remove or dismisses the discovery.
+  if(!Array.isArray(x.shortlist))x.shortlist=[];
+  if(x.shortlist.length<5){x.shortlist.push(x.report);x.report=null;}
+  save(x);
  }
- function progress(){const x=get();if(!x.scout||x.report)return;const w=completed();if(w>=4&&w%4===0&&x.lastReport!==w)discover(x,w);}
+ function progress(){const x=get();if(!x.scout)return;const w=completed();if(w>=4&&w%4===0&&x.lastReport!==w)discover(x,w);}
  // This function is called only when matchweek income is credited; reports are not created by refreshing.
  const previousCredit=tlCreditIncome;
  tlCreditIncome=function(week,home){const result=previousCredit(week,home);if(result){const x=get();if(x.scout&&!x.report){const w=week+1;if(w>=4&&w%4===0&&x.lastReport!==w)discover(x,w);}}return result;};
@@ -3625,11 +3633,40 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   line('SHARED WEEKLY WAGES: '+pounds(tlWeeklyWages())+' / '+pounds(tlWageBudget())+' · AVAILABLE '+pounds(Math.max(0,tlWageBudget()-tlWeeklyWages())));
   if(x.scout)line('EMPLOYED: '+x.scout.name+' · RATING '+x.scout.rating+' · '+pounds(x.scout.wage)+'/week');
   else line('NO SCOUT EMPLOYED. Hire one to begin receiving reports.');
-  if(x.scout){const next=(Math.floor(w/4)+1)*4;line(x.report?'NEW PLAYER REPORT AVAILABLE':('NEXT REPORT: '+(w%4===0&&w>0?4:4-w%4)+' LEAGUE MATCHWEEK(S) · MATCHWEEK '+next));}
-  if(x.report){const p=x.report;line('DISCOVERED PLAYER: '+p.name+' · '+p.pos+' · AGE '+p.age+' · CURRENT RATING '+p.rating+' · ESTIMATED POTENTIAL '+p.low+'–'+p.high+' · FEE '+pounds(p.fee)+' · WAGES '+pounds(p.wage)+'/week');
-   btn('SIGN PLAYER',()=>{const a=get(),q=a.report;if(!q||q.id!==p.id)return renderTransfers();if(!transferWindow().open)return alert('You can only sign scouted players during a transfer window.');squadLoad();if(squadPlayers.length>=25)return alert('Squad is full (25 players).');const f=financeData();if(f.budget<q.fee)return alert('Insufficient transfer budget.');if(tlWeeklyWages()+q.wage>tlWageBudget())return alert('Signing would exceed the shared wage budget.');if(!confirm('Sign '+q.name+' for '+pounds(q.fee)+' and '+pounds(q.wage)+'/week?'))return;f.budget-=q.fee;f.balance-=q.fee;f.spent+=q.fee;storeFinance(f);const player={id:q.id,name:q.name,pos:q.pos,age:q.age,rating:q.rating,potential:q.potential,wage:q.wage,contractUntil:tlSeason()+3,economyVersion:2,injury:0,ban:0,yellows:0};squadPlayers.push(player);squadSave();a.report=null;save(a);renderTransfers();});
-   btn('DISMISS REPORT',()=>{if(!confirm('Dismiss this player report?'))return;const a=get();a.report=null;save(a);renderTransfers();});
+  if(x.scout){const next=(Math.floor(w/4)+1)*4;line(x.report?'NEW DISCOVERY AWAITING SHORTLIST SPACE':('NEXT REPORT: '+(w%4===0&&w>0?4:4-w%4)+' LEAGUE MATCHWEEK(S) · MATCHWEEK '+next));}
+  if(!Array.isArray(x.shortlist))x.shortlist=[];
+  // Existing saves: migrate a previously discovered player without losing them.
+  if(x.report&&x.shortlist.length<5){x.shortlist.push(x.report);x.report=null;save(x);}
+  line('SCOUTING SHORTLIST: '+x.shortlist.length+'/5 · PLAYERS REMAIN AVAILABLE ACROSS SEASONS');
+  if(x.report){
+   const p=x.report;
+   line('NEW DISCOVERY (SHORTLIST FULL): '+p.name+' · '+p.pos+' · AGE '+p.age+' · CURRENT RATING '+p.rating+' · ESTIMATED POTENTIAL '+p.low+'–'+p.high+' · FEE '+pounds(p.fee)+' · WAGES '+pounds(p.wage)+'/week');
+   btn('DISMISS NEW DISCOVERY',()=>{if(!confirm('Dismiss '+p.name+'?'))return;const a=get();a.report=null;save(a);renderTransfers();});
   }
+  const sign=(id)=>{
+   const a=get(),q=(a.shortlist||[]).find(p=>p.id===id);
+   if(!q)return renderTransfers();
+   if(!transferWindow().open)return alert('You can only sign scouted players during a transfer window.');
+   squadLoad();if(squadPlayers.length>=25)return alert('Squad is full (25 players).');
+   const f=financeData();if(f.budget<q.fee)return alert('Insufficient transfer budget.');
+   if(tlWeeklyWages()+q.wage>tlWageBudget())return alert('Signing would exceed the shared wage budget.');
+   if(!confirm('Sign '+q.name+' for '+pounds(q.fee)+' and '+pounds(q.wage)+'/week?'))return;
+   f.budget-=q.fee;f.balance-=q.fee;f.spent+=q.fee;storeFinance(f);
+   squadPlayers.push({id:q.id,name:q.name,pos:q.pos,age:q.age,rating:q.rating,potential:q.potential,wage:q.wage,contractUntil:tlSeason()+3,economyVersion:2,injury:0,ban:0,yellows:0});
+   squadSave();a.shortlist=a.shortlist.filter(p=>p.id!==id);
+   if(a.report&&a.shortlist.length<5){a.shortlist.push(a.report);a.report=null;}
+   save(a);renderTransfers();
+  };
+  x.shortlist.forEach(p=>{
+   line('SHORTLIST PLAYER: '+p.name+' · '+p.pos+' · AGE '+p.age+' · CURRENT RATING '+p.rating+' · ESTIMATED POTENTIAL '+p.low+'–'+p.high+' · FEE '+pounds(p.fee)+' · WAGES '+pounds(p.wage)+'/week');
+   btn('SIGN '+p.name.toUpperCase(),()=>sign(p.id));
+   btn('REMOVE '+p.name.toUpperCase(),()=>{
+    if(!confirm('Remove '+p.name+' from the shortlist?'))return;
+    const a=get();a.shortlist=(a.shortlist||[]).filter(q=>q.id!==p.id);
+    if(a.report&&a.shortlist.length<5){a.shortlist.push(a.report);a.report=null;}
+    save(a);renderTransfers();
+   });
+  });
   line('HIRE OR REPLACE YOUR SCOUT · BETTER SCOUTS GIVE NARROWER POTENTIAL ESTIMATES');
   for(const r of ranks){const wrap=document.createElement('div');wrap.className='tl-scout-option';const label=document.createElement('span');label.textContent=r.name+' · rating '+r.min+'–'+r.max+' · '+pounds(r.wage)+'/week';wrap.appendChild(label);btn(x.scout&&x.scout.name===r.name?'EMPLOYED':'HIRE',()=>{const a=get();const available=tlWageBudget()-tlWeeklyWages()+(a.scout?Number(a.scout.wage)||0:0);if(r.wage>available)return alert('Not enough wage budget. Available after replacing current scout: '+pounds(Math.max(0,available))+'/week.');if(!confirm('Hire '+r.name+' for '+pounds(r.wage)+'/week?'))return;const rating=r.min+Math.floor(Math.random()*(r.max-r.min+1));a.scout={name:r.name,rating,wage:r.wage};save(a);renderTransfers();},wrap);panel.appendChild(wrap);}
   if(x.scout)btn('RELEASE SCOUT',()=>{if(!confirm('Release your scout and stop future reports?'))return;const a=get();a.scout=null;save(a);renderTransfers();});
@@ -3697,6 +3734,15 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
    if(t.startsWith('SHARED WEEKLY WAGES')||t.startsWith('EMPLOYED:')||t.startsWith('NO SCOUT EMPLOYED')||t.startsWith('NEXT REPORT:')||t.startsWith('NEW PLAYER REPORT AVAILABLE')){
     node.className='tl-sc-line';summary.appendChild(node);return;
    }
+   if(t.startsWith('SCOUTING SHORTLIST:')){
+    const heading=document.createElement('div');heading.className='tl-sc-line';heading.textContent=t;report.appendChild(heading);return;
+   }
+   if(t.startsWith('SHORTLIST PLAYER:')||t.startsWith('NEW DISCOVERY (SHORTLIST FULL):')){
+    const heading=document.createElement('div');heading.className='tl-sc-player';
+    const pieces=t.replace(/^.*?: /,'').split(' · ');
+    pieces.forEach((part,i)=>{const line=document.createElement('div');line.textContent=part;if(i===0)line.style.fontWeight='bold';heading.appendChild(line);});
+    report.appendChild(heading);return;
+   }
    if(t.startsWith('DISCOVERED PLAYER:')){
     node.className='tl-sc-player';
     const p=t.replace('DISCOVERED PLAYER: ','').split(' · ');
@@ -3705,8 +3751,9 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
     report.appendChild(node);return;
    }
    if(node.tagName==='BUTTON'){
-    if(t==='SIGN PLAYER'||t==='DISMISS REPORT'){if(!actions){actions=document.createElement('div');actions.className='tl-sc-actions';report.appendChild(actions);}actions.appendChild(node);}
-    else hiring.appendChild(node);
+    if(t.startsWith('SIGN ')||t.startsWith('REMOVE ')||t.startsWith('DISMISS NEW DISCOVERY')){
+     const actionsRow=document.createElement('div');actionsRow.className='tl-sc-actions';actionsRow.appendChild(node);report.appendChild(actionsRow);
+    }else hiring.appendChild(node);
    }else report.appendChild(node);
   });
   if(!report.children.length){const p=document.createElement('div');p.className='tl-sc-line';p.textContent='No player report available yet. Your scout discovers a new player every four completed league matchweeks.';report.appendChild(p);}
@@ -3715,5 +3762,11 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
  };
 })();
 </script>
+<style id="tlScoutingShortlistStyle">
+#tlScoutScreen .tl-sc-report{overflow-y:auto;overscroll-behavior:contain}
+#tlScoutScreen .tl-sc-report .tl-sc-player{font-size:1.16cqw;line-height:1.22;padding:1.1% 2%;margin:1% 0}
+#tlScoutScreen .tl-sc-report .tl-sc-actions{display:inline-flex;margin:.4% 1% 1% 0}
+#tlScoutScreen .tl-sc-report .tl-sc-actions .ex-button{font-size:1.02cqw;padding:.6% 1.5%}
+</style>
 </body>
 </html>
