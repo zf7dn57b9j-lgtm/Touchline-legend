@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Touchline Legend</title>
+<!-- TL_EXPANSION_20_V1 -->
 <style>
 *{box-sizing:border-box}
 html,body{
@@ -254,6 +255,15 @@ html,body{
 #dashboard button[aria-label="Club History and Trophy Cabinet"]:focus-visible{
  outline:3px solid white!important;outline-offset:-3px!important;
 }
+</style>
+<style id="tlExpansion20Style">
+#fixturesScreen .fl-fixture-grid,#tlAllResultsScreen .fl-fixture-grid{grid-template-rows:repeat(5,1fr);gap:1%}
+#fixturesScreen .fl-match,#tlAllResultsScreen .fl-match{font-size:1.02cqw;padding:.35% 1%;border-radius:6px;min-width:0;overflow:hidden}
+#fixturesScreen .fl-match span,#tlAllResultsScreen .fl-match span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#leagueScreen .fl-table{font-size:.86cqw}
+#leagueScreen .fl-table th{height:1.65cqw}
+#leagueScreen .fl-table td{height:1.48cqw}
+#leagueScreen .fl-subtitle{font-size:1.05cqw;height:5%}
 </style>
 </head>
 <body>
@@ -753,10 +763,10 @@ dashboardAction=function(name){if(name==='Tactics'){openTactics();return}tactics
 // Double round robin: 22 matchweeks, six matches each.
 function makeSchedule(){
  const circle=teams.map((_,i)=>i),weeks=[];
- for(let round=0;round<11;round++){
+ for(let round=0;round<teams.length-1;round++){
   const matches=[];
-  for(let j=0;j<6;j++){
-   const a=circle[j],b=circle[11-j];
+  for(let j=0;j<teams.length/2;j++){
+   const a=circle[j],b=circle[teams.length-1-j];
    matches.push({home:round%2===0?a:b,away:round%2===0?b:a,homeGoals:null,awayGoals:null});
   }
   weeks.push(matches);
@@ -770,7 +780,7 @@ function careerClub(){try{return JSON.parse(localStorage.getItem('touchlineCaree
 function matchStorageKey(){return 'touchlineMatches_'+careerClub()}
 function loadMatches(){
  let saved=null;try{saved=JSON.parse(localStorage.getItem(matchStorageKey())||'null')}catch(e){}
- leagueMatches=Array.isArray(saved)&&saved.length===22&&saved.every(w=>Array.isArray(w)&&w.length===6)?saved:JSON.parse(JSON.stringify(initialSchedule));
+ leagueMatches=Array.isArray(saved)&&saved.length===38&&saved.every(w=>Array.isArray(w)&&w.length===10)?saved:JSON.parse(JSON.stringify(makeSchedule()));
 }
 function saveMatches(){localStorage.setItem(matchStorageKey(),JSON.stringify(leagueMatches))}
 function showFootballScreen(id){
@@ -778,10 +788,10 @@ function showFootballScreen(id){
   const el=document.getElementById(name);if(el)el.style.display=name===id?'flex':'none';
  }
 }
-function openFixtures(){loadMatches();const next=currentWeek();fixtureWeek=next<0?21:next;showFootballScreen('fixturesScreen');renderFixtures()}
-function changeFixtureWeek(n){fixtureWeek=(fixtureWeek+n+22)%22;renderFixtures()}
+function openFixtures(){loadMatches();const next=currentWeek();fixtureWeek=next<0?37:next;showFootballScreen('fixturesScreen');renderFixtures()}
+function changeFixtureWeek(n){fixtureWeek=(fixtureWeek+n+38)%38;renderFixtures()}
 function renderFixtures(){
- document.getElementById('fixtureWeekLabel').textContent='MATCHWEEK '+(fixtureWeek+1)+' OF 22';
+ document.getElementById('fixtureWeekLabel').textContent='MATCHWEEK '+(fixtureWeek+1)+' OF 38';
  const host=document.getElementById('fixtureMatches');host.replaceChildren();const club=careerClub();
  for(const m of leagueMatches[fixtureWeek]){
   const el=document.createElement('div');el.className='fl-match'+(teams[m.home]===club||teams[m.away]===club?' mine':'');
@@ -850,10 +860,10 @@ const marketNames=[['Ethan Cole','DC',23,72],['Oliver Stone','MC',24,74],['Leo H
 function transferWindow(){
  loadMatches();
  const completed=leagueMatches.filter(week=>week.some(m=>(teams[m.home]===careerClub()||teams[m.away]===careerClub())&&Number.isInteger(m.homeGoals)&&Number.isInteger(m.awayGoals))).length;
- if(completed===22)return {open:true,id:'offseason',label:'END-OF-SEASON WINDOW',remaining:null};
+ if(completed===38)return {open:true,id:'offseason',label:'END-OF-SEASON WINDOW',remaining:null};
  if(completed<5)return {open:true,id:'summer',label:'SUMMER WINDOW',remaining:5-completed};
- if(completed>=11&&completed<14)return {open:true,id:'winter',label:'WINTER WINDOW',remaining:14-completed};
- return {open:false,id:'closed',label:completed<11?'CLOSED — WINTER WINDOW OPENS AT MATCHWEEK 12':'CLOSED — REOPENS AT END OF SEASON',remaining:null};
+ if(completed>=18&&completed<23)return {open:true,id:'winter',label:'WINTER WINDOW',remaining:23-completed};
+ return {open:false,id:'closed',label:completed<18?'CLOSED — WINTER WINDOW OPENS AT MATCHWEEK 19':'CLOSED — REOPENS AT END OF SEASON',remaining:null};
 }
 function marketKey(){return 'touchlineMarket_'+careerClub()+'_'+transferWindow().id}
 // Each window has its own consistent pool; purchases persist for that window.
@@ -907,7 +917,7 @@ function doTransfer(p){
 }
 function openFinances(){showExtra('financesScreen');const f=financeData();document.getElementById('financeBody').innerHTML='<div class="ex-metric">CLUB BALANCE: '+pounds(f.balance)+'</div><div class="ex-metric">TRANSFER BUDGET: '+pounds(f.budget)+'</div><div class="ex-metric">TRANSFER SPENDING: '+pounds(f.spent)+'</div><div class="ex-metric">PLAYER SALES: '+pounds(f.received)+'</div><p class="ex-note">Transfer activity updates these figures automatically.</p>'}
 function currentWeek(){loadMatches();return leagueMatches.findIndex(w=>w.some(m=>teams[m.home]===careerClub()&&m.homeGoals===null||teams[m.away]===careerClub()&&m.awayGoals===null))}
-function openNextMatch(){const w=currentWeek();showExtra('nextMatchScreen');const box=document.getElementById('nextMatchBody'),button=document.getElementById('playInstantButton');if(w<0){box.textContent='Season complete — all 22 matches played.';button.disabled=true;return}button.disabled=false;const m=leagueMatches[w].find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());box.replaceChildren();const lines=['MATCHWEEK '+(w+1)+' OF 22',teams[m.home]+'  v  '+teams[m.away],teams[m.home]===careerClub()?'HOME MATCH':'AWAY MATCH','Formation: '+formations[squadFormationIndex]+'  |  Mentality: '+tacticMentality,'Press PLAY INSTANT MATCH for the result'];lines.forEach(x=>{const d=document.createElement('div');d.textContent=x;box.appendChild(d)})}
+function openNextMatch(){const w=currentWeek();showExtra('nextMatchScreen');const box=document.getElementById('nextMatchBody'),button=document.getElementById('playInstantButton');if(w<0){box.textContent='Season complete — all 38 matches played.';button.disabled=true;return}button.disabled=false;const m=leagueMatches[w].find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());box.replaceChildren();const lines=['MATCHWEEK '+(w+1)+' OF 38',teams[m.home]+'  v  '+teams[m.away],teams[m.home]===careerClub()?'HOME MATCH':'AWAY MATCH','Formation: '+formations[squadFormationIndex]+'  |  Mentality: '+tacticMentality,'Press PLAY INSTANT MATCH for the result'];lines.forEach(x=>{const d=document.createElement('div');d.textContent=x;box.appendChild(d)})}
 function goals(){let n=0;while(n<6&&Math.random()<.48)n++;return n}
 function playInstantMatch(){const w=currentWeek();if(w<0)return;const matches=leagueMatches[w],my=matches.find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());if(!my)return;const f=financeData();for(const m of matches){if(m.homeGoals!==null)continue;const score=tlSimulateFixture(m,w);m.homeGoals=score[0];m.awayGoals=score[1]}saveMatches();const mineHome=teams[my.home]===careerClub(),ours=mineHome?my.homeGoals:my.awayGoals;const attackers=squadPlayers.slice(0,11).filter(p=>p.pos==='ST'||p.pos==='AMC'||p.pos==='MC');const scorers=Array.from({length:ours},()=>tlChooseScorer(squadPlayers.slice(0,11)));const shotsHome=my.homeGoals+4+Math.floor(Math.random()*9),shotsAway=my.awayGoals+4+Math.floor(Math.random()*9);const possession=45+Math.floor(Math.random()*11);const box=document.getElementById('resultsBody');box.replaceChildren();[teams[my.home]+'  '+my.homeGoals+' – '+my.awayGoals+'  '+teams[my.away],'Matchweek '+(w+1),'Your goalscorers: '+(scorers.join(', ')||'None'),'Shots: '+shotsHome+' – '+shotsAway,'Shots on target: '+Math.min(shotsHome,my.homeGoals+2+Math.floor(Math.random()*3))+' – '+Math.min(shotsAway,my.awayGoals+2+Math.floor(Math.random()*3)),'Possession: '+possession+'% – '+(100-possession)+'%','Corners: '+(2+Math.floor(Math.random()*8))+' – '+(2+Math.floor(Math.random()*8))].forEach(t=>{const d=document.createElement('div');d.textContent=t;box.appendChild(d)});localStorage.setItem('touchlineLastResult_'+careerClub(),box.innerText);showExtra('resultsScreen')}
 function openSave(){showExtra('saveScreen');document.getElementById('saveBody').textContent='Save your career progress, transfers, squad, tactics, fixtures and league results.'}
@@ -924,16 +934,101 @@ dashboardAction=function(name){if(name==='Transfers'){openTransfers();return}if(
 // Multi-season career: preserve existing 2026/27 data and all current screens.
 const careerDivisionNames=['League 3','League 2','League 1','Premier League'];
 const divisionOpponents=[
- ['Westbridge United','Redmoor Athletic','Ironvale FC','Brookfield Town','Seabourne FC','Oakchester United','Kingsford Town','Ashbourne Rovers','Northwick Albion','Eastport City','Ravenshill FC','Ledgemont Athletic'],
- ['Briarford Wanderers','Halewick Villa','Moorbridge County','Creston Wednesday','Winton Rovers','Dunmere City','Stonemill Albion','Portleigh United','Bellchester Town','Marshfield Athletic','Highbury Vale','Calder Rangers'],
- ['Northgate United','Southport City','Harbour Athletic','Oldcastle Wanderers','Millbrook United','Crownford County','Westmere City','Ridgeway Rovers','Kingsbridge Albion','Waverley Athletic','Eastfield United','Whitehall Villa'],
- ['Capital City','Royal Borough','Grandchester United','Atlantic City','Highland Rovers','Central Athletic','North Coast Wanderers','Southvale United','Imperial Town','Riverside City','Metropolitan Albion','Union County']
+ [
+  "Westbridge United",
+  "Redmoor Athletic",
+  "Ironvale FC",
+  "Brookfield Town",
+  "Seabourne FC",
+  "Oakchester United",
+  "Kingsford Town",
+  "Ashbourne Rovers",
+  "Northwick Albion",
+  "Eastport City",
+  "Ravenshill FC",
+  "Ledgemont Athletic",
+  "Willowford City",
+  "Stonehaven Rovers",
+  "Meadowport Albion",
+  "Eastmere Athletic",
+  "Northbridge Town",
+  "Fairhaven County",
+  "Redcastle United",
+  "Larkfield Wanderers"
+ ],
+ [
+  "Barnsliy",
+  "Blackpaol",
+  "Bradfard City",
+  "Bromlay",
+  "Burton Albien",
+  "Cambridga United",
+  "Doncaster Rovars",
+  "Huddersfiold Town",
+  "Leicestar City",
+  "Leytan Orient",
+  "Luton Tawn",
+  "Mansfiold Town",
+  "Milton Kaynes",
+  "Notts Caunty",
+  "Oxford Unated",
+  "Peterboraugh United",
+  "Plymauth Argyle",
+  "Readang",
+  "Sheffiold Wednesday",
+  "Stevenega"
+ ],
+ [
+  "Birminghem City",
+  "Blackburn Rovars",
+  "Bolton Wanderars",
+  "Bristal City",
+  "Burnlay",
+  "Cardiff Cety",
+  "Charlton Athletac",
+  "Derby Caunty",
+  "Lincoln Cety",
+  "Middlesbraugh",
+  "Millwoll",
+  "Norwich Cety",
+  "Portsmouth",
+  "Preston North And",
+  "Queens Park Rangars",
+  "Sheffield Unated",
+  "Southamptan",
+  "Stoke Cety",
+  "Swansea Cety",
+  "Watfard"
+ ],
+ [
+  "AFC Bournemauth",
+  "Arsenol",
+  "Aston Villo",
+  "Brentfard",
+  "Brighton & Hove Albien",
+  "Chelseo",
+  "Coventry Cety",
+  "Crystal Palaca",
+  "Everten",
+  "Fulhem",
+  "Hull Cety",
+  "Ipswich Tawn",
+  "Leeds Unated",
+  "Liverpaol",
+  "Manchester Cety",
+  "Manchester Unated",
+  "Newcastle Unated",
+  "Nottingham Forast",
+  "Sunderlend",
+  "Tottenham Hotspar"
+ ]
 ];
 function careerSeasonKey(){return 'touchlineSeason_'+careerClub()}
 function careerSeason(){let x;try{x=JSON.parse(localStorage.getItem(careerSeasonKey())||'null')}catch(e){}return x&&Number.isInteger(x.number)&&x.number>=1&&Number.isInteger(x.division)?x:{number:1,division:0,history:[],clubs:null}}
 function seasonLabel(){const n=2025+careerSeason().number;return n+'/'+String((n+1)%100).padStart(2,'0')}
 function seasonDivision(){return careerDivisionNames[Math.max(0,Math.min(3,careerSeason().division))]}
-function seasonTeams(){const st=careerSeason();if(st.number===1)return;const list=Array.isArray(st.clubs)&&st.clubs.length===12?st.clubs:null;if(list&&teams.some((x,i)=>x!==list[i]))teams.splice(0,teams.length,...list)}
+function seasonTeams(){const st=careerSeason();if(st.number===1)return;const list=Array.isArray(st.clubs)&&st.clubs.length===20?st.clubs:null;if(list&&teams.some((x,i)=>x!==list[i]))teams.splice(0,teams.length,...list)}
+teams.splice(0,teams.length,...divisionOpponents[0]);
 seasonTeams();
 const oldMatchStorageKey=matchStorageKey;
 matchStorageKey=function(){const st=careerSeason();return st.number===1?oldMatchStorageKey():'touchlineMatches_'+careerClub()+'_season'+st.number};
@@ -948,12 +1043,12 @@ openDashboard=function(){document.getElementById('seasonScreen').style.display='
 const oldDashboardLiveSeason=updateDashboardLive;
 updateDashboardLive=function(){oldDashboardLiveSeason();const el=document.getElementById('dashboardLive');if(el)el.textContent=el.textContent.replace(/SEASON: \d{4}\/\d{2}/,'SEASON: '+seasonLabel()+' | '+seasonDivision())};
 const oldRenderLeagueSeason=renderLeague;
-renderLeague=function(){oldRenderLeagueSeason();const label=document.querySelector('#leagueScreen .fl-subtitle');if(label)label.textContent='SEASON '+seasonLabel()+' · '+seasonDivision().toUpperCase()+' · 12 CLUBS'};
+renderLeague=function(){oldRenderLeagueSeason();const label=document.querySelector('#leagueScreen .fl-subtitle');if(label)label.textContent='SEASON '+seasonLabel()+' · '+seasonDivision().toUpperCase()+' · 20 CLUBS'};
 function finalSeasonTable(){loadMatches();const stats=teams.map((name,id)=>({name,id,p:0,gd:0,gf:0,pts:0}));for(const week of leagueMatches)for(const m of week){if(!Number.isInteger(m.homeGoals)||!Number.isInteger(m.awayGoals))continue;const h=stats[m.home],a=stats[m.away];h.p++;a.p++;h.gf+=m.homeGoals;a.gf+=m.awayGoals;h.gd+=m.homeGoals-m.awayGoals;a.gd+=m.awayGoals-m.homeGoals;if(m.homeGoals>m.awayGoals)h.pts+=3;else if(m.homeGoals<m.awayGoals)a.pts+=3;else{h.pts++;a.pts++}}return stats.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||a.name.localeCompare(b.name))}
-function openSeasonReview(){const table=finalSeasonTable(),rank=table.findIndex(t=>t.name===careerClub())+1,st=careerSeason(),box=document.getElementById('seasonBody');let outcome='REMAINING IN '+seasonDivision().toUpperCase();if(rank<=2&&st.division<3)outcome='PROMOTED TO '+careerDivisionNames[st.division+1].toUpperCase()+'!';else if(rank>=11&&st.division>0)outcome='RELEGATED TO '+careerDivisionNames[st.division-1].toUpperCase();else if(rank===1&&st.division===3)outcome='PREMIER DIVISION CHAMPIONS!';box.replaceChildren();['SEASON '+seasonLabel(),seasonDivision(),'FINAL POSITION: '+rank+' OF 12','POINTS: '+table[rank-1].pts,outcome,'Your squad and finances carry forward.','The next season has 22 fresh fixtures.'].forEach((line,i)=>{const d=document.createElement('div');d.textContent=line;if(i===4)d.className='season-highlight';box.appendChild(d)});showFootballScreen('seasonScreen')}
+function openSeasonReview(){const table=finalSeasonTable(),rank=table.findIndex(t=>t.name===careerClub())+1,st=careerSeason(),box=document.getElementById('seasonBody');let outcome='REMAINING IN '+seasonDivision().toUpperCase();if(rank<=2&&st.division<3)outcome='PROMOTED TO '+careerDivisionNames[st.division+1].toUpperCase()+'!';else if(rank>=19&&st.division>0)outcome='RELEGATED TO '+careerDivisionNames[st.division-1].toUpperCase();else if(rank===1&&st.division===3)outcome='PREMIER DIVISION CHAMPIONS!';box.replaceChildren();['SEASON '+seasonLabel(),seasonDivision(),'FINAL POSITION: '+rank+' OF 20','POINTS: '+table[rank-1].pts,outcome,'Your squad and finances carry forward.','The next season has 38 fresh fixtures.'].forEach((line,i)=>{const d=document.createElement('div');d.textContent=line;if(i===4)d.className='season-highlight';box.appendChild(d)});showFootballScreen('seasonScreen')}
 const oldOpenNextMatchSeason=openNextMatch;
 openNextMatch=function(){if(currentWeek()<0){openSeasonReview();return}oldOpenNextMatchSeason();const box=document.getElementById('nextMatchBody');if(box){const label=document.createElement('div');label.textContent=seasonLabel()+' · '+seasonDivision();box.prepend(label)}};
-function advanceSeason(){if(currentWeek()>=0){alert('Finish the current season first.');return}const st=careerSeason(),table=finalSeasonTable(),rank=table.findIndex(t=>t.name===careerClub())+1;if(rank<1)return;const newDivision=Math.max(0,Math.min(3,st.division+(rank<=2?1:rank>=11?-1:0)));const history=Array.isArray(st.history)?st.history:[];history.push({season:seasonLabel(),division:st.division,position:rank,points:table[rank-1].pts});const club=careerClub(),pool=divisionOpponents[newDivision].filter(x=>x!==club);const rotated=pool.slice((st.number*3)%pool.length).concat(pool.slice(0,(st.number*3)%pool.length));const nextClubs=[club,...rotated.slice(0,11)];const next={number:st.number+1,division:newDivision,history,clubs:nextClubs};localStorage.setItem(careerSeasonKey(),JSON.stringify(next));teams.splice(0,teams.length,...nextClubs);leagueMatches=JSON.parse(JSON.stringify(makeSchedule()));saveMatches();fixtureWeek=0;const f=financeData();const prizeScale=[1,5,35,250][st.division];const award=(rank===1?200000:rank===2?120000:40000)*prizeScale;f.balance+=award;f.budget+=award;storeFinance(f);squadLoad();squadSave();openDashboard();/* Season report handles the welcome message. */}
+function advanceSeason(){if(currentWeek()>=0){alert('Finish the current season first.');return}const st=careerSeason(),table=finalSeasonTable(),rank=table.findIndex(t=>t.name===careerClub())+1;if(rank<1)return;const newDivision=Math.max(0,Math.min(3,st.division+(rank<=2?1:rank>=19?-1:0)));const history=Array.isArray(st.history)?st.history:[];history.push({season:seasonLabel(),division:st.division,position:rank,points:table[rank-1].pts});const club=careerClub(),pool=divisionOpponents[newDivision].filter(x=>x!==club);const rotated=pool.slice((st.number*3)%pool.length).concat(pool.slice(0,(st.number*3)%pool.length));const nextClubs=[club,...rotated.slice(0,19)];const next={number:st.number+1,division:newDivision,history,clubs:nextClubs};localStorage.setItem(careerSeasonKey(),JSON.stringify(next));teams.splice(0,teams.length,...nextClubs);leagueMatches=JSON.parse(JSON.stringify(makeSchedule()));saveMatches();fixtureWeek=0;const f=financeData();const prizeScale=[1,5,35,250][st.division];const award=(rank===1?200000:rank===2?120000:40000)*prizeScale;f.balance+=award;f.budget+=award;storeFinance(f);squadLoad();squadSave();openDashboard();/* Season report handles the welcome message. */}
 const oldContinueCareerSeason=continueCareer;
 continueCareer=function(){seasonTeams();oldContinueCareerSeason()};
 const oldStartCareerSeason=startCareer;
@@ -1198,7 +1293,7 @@ function tlReportSnapshotNow(){
   const gf=home?m.homeGoals:m.awayGoals,ga=home?m.awayGoals:m.homeGoals;
   if(gf>ga)wins++;else if(gf===ga)draws++;else losses++;
  }
- const outcome=rank===1&&st.division===3?'PREMIER DIVISION CHAMPIONS!':rank<=2&&st.division<3?'PROMOTED TO '+careerDivisionNames[st.division+1].toUpperCase()+'!':rank>=11&&st.division>0?'RELEGATED TO '+careerDivisionNames[st.division-1].toUpperCase():'REMAINING IN '+seasonDivision().toUpperCase();
+ const outcome=rank===1&&st.division===3?'PREMIER DIVISION CHAMPIONS!':rank<=2&&st.division<3?'PROMOTED TO '+careerDivisionNames[st.division+1].toUpperCase()+'!':rank>=19&&st.division>0?'RELEGATED TO '+careerDivisionNames[st.division-1].toUpperCase():'REMAINING IN '+seasonDivision().toUpperCase();
  return {season:seasonLabel(),division:seasonDivision(),rank,points:table[rank-1].pts,wins,draws,losses,outcome,players,finance:{...financeData()},nextNumber:st.number+1};
 }
 function tlRenderFullReport(after){
@@ -1211,7 +1306,7 @@ function tlRenderFullReport(after){
  body.appendChild(tlReportNode('div','sr-hero',r.outcome));
  body.appendChild(tlReportNode('div','sr-sub',r.season+' · '+r.division+' · '+careerClub()));
  const metrics=tlReportNode('div','sr-metrics');
- for(const [label,value] of [['POSITION',r.rank+' / 12'],['POINTS',r.points],['PLAYED',22],['WON',r.wins],['DRAWN',r.draws],['LOST',r.losses]]){const m=tlReportNode('div','sr-metric');m.append(tlReportNode('small','',label),document.createTextNode(String(value)));metrics.appendChild(m)}
+ for(const [label,value] of [['POSITION',r.rank+' / 12'],['POINTS',r.points],['PLAYED',38],['WON',r.wins],['DRAWN',r.draws],['LOST',r.losses]]){const m=tlReportNode('div','sr-metric');m.append(tlReportNode('small','',label),document.createTextNode(String(value)));metrics.appendChild(m)}
  body.appendChild(metrics);
  const cols=tlReportNode('div','sr-columns'),left=tlReportNode('div',''),right=tlReportNode('div','');
  const scorers=[...r.players].filter(p=>p.seasonGoals>0).sort((a,b)=>b.seasonGoals-a.seasonGoals).slice(0,5);
@@ -1276,7 +1371,7 @@ startCareer=function(){
  }
  for(const k of keys)localStorage.removeItem(k);
  teams.splice(0,teams.length,...tlInitialClubs);
- leagueMatches=JSON.parse(JSON.stringify(initialSchedule));
+ leagueMatches=JSON.parse(JSON.stringify(makeSchedule()));
  fixtureWeek=0;
  squadFormationIndex=0;
  squadSelected=-1;
@@ -1451,7 +1546,7 @@ playInstantMatch=function(){
  tlYouthDevelopmentPreviousPlay();
  const after=currentWeek();
  if(before<0||before===after)return;
- const played=after<0?22:after;
+ const played=after<0?38:after;
  if(played===0||played%5!==0)return;
  const key='touchlineYouthDevelopment_'+careerClub()+'_'+tlSeason();
  const last=Number(localStorage.getItem(key)||0);
@@ -1833,7 +1928,7 @@ playInstantMatch=function(){
  tlRareYouthPreviousPlay();
  const after=currentWeek();
  if(before<0||before===after)return;
- const played=after<0?22:after;
+ const played=after<0?38:after;
  if(played%5!==0)return;
  const key='touchlineSeniorYouthGrowth_'+careerClub()+'_season'+tlSeason();
  if(Number(localStorage.getItem(key)||0)>=played)return;
@@ -1866,9 +1961,9 @@ playInstantMatch=function(){
 <script>
 // Standalone saved knockout competitions, tied to each career season.
 // National: all 48 league clubs plus 16 non-league clubs (64 total). Europe: 16 clubs for qualified Premier managers.
-const tlCupRounds={national:['ROUND OF 64','ROUND OF 32','ROUND OF 16','QUARTER-FINAL','SEMI-FINAL','FINAL'],europe:['ROUND OF 16','QUARTER-FINAL','SEMI-FINAL','FINAL']};
-const tlCupWeeks={national:[1,4,8,12,16,20],europe:[3,8,13,19]};
-const tlCupPrizes={national:[10000,25000,65000,150000,400000,1500000],europe:[1500000,4000000,10000000,25000000]};
+const tlCupRounds={national:['ROUND OF 128','ROUND OF 64','ROUND OF 32','ROUND OF 16','QUARTER-FINAL','SEMI-FINAL','FINAL'],europe:['ROUND OF 16','QUARTER-FINAL','SEMI-FINAL','FINAL']};
+const tlCupWeeks={national:[2,7,12,18,24,30,36],europe:[3,8,13,19]};
+const tlCupPrizes={national:[5000,10000,25000,65000,150000,400000,1500000],europe:[1500000,4000000,10000000,25000000]};
 const tlCupWinnerBonus={national:4000000,europe:45000000};
 const tlCupNames={national:'NATIONAL CUP',europe:'EUROPEAN CUP'};
 let tlCupTab='national';
@@ -1890,9 +1985,9 @@ function tlCupPool(kind){
   const regionalIndex=league.findIndex(e=>e.name==='Ledgemont Athletic');
   if(mine&&!league.some(e=>e.name===mine)){
    if(regionalIndex>=0)league[regionalIndex]=tlCupEntry(mine,div);
-   else league[0]=tlCupEntry(mine,div);
+   else {const slot=league.findIndex(e=>e.division===div);league[slot>=0?slot:0]=tlCupEntry(mine,div);}
   }
-  const nonLeague=tlNonLeagueClubs.map(name=>tlCupEntry(name,-1));
+  const nonLeague=Array.from({length:48},(_,i)=>tlCupEntry(tlNonLeagueClubs[i]||('Non-League '+['Vale','Rovers','Town','Athletic'][i%4]+' '+(i+1)),-1));
   return [...league,...nonLeague];
  }
  const overseas=['Madrid Royals','Munich Athletic','Paris Étoile','Milan City','Turin United','Lisbon Sporting','Amsterdam Ajaxia','Barcelona Athletic','Dortmund FC','Rome Imperial','Porto Mariners','Rotterdam City','Brussels Union','Vienna Rapid','Copenhagen North','Prague Sparta','Lyon Olympique','Napoli Coast','Seville Athletic','Marseille Blue'];
@@ -1952,7 +2047,7 @@ function tlCupAdvance(kind,cup){
  if(winners.length===1){cup.champion=winners[0].name;return}
  if(cup.rounds.length<tlCupRounds[kind].length)cup.rounds.push(tlCupDraw(winners,round+1,kind));
 }
-function tlCupWeekReady(kind,cup){const index=cup.rounds.length-1;const played=currentWeek();const count=played<0?22:played;return count>=tlCupWeeks[kind][index]}
+function tlCupWeekReady(kind,cup){const index=cup.rounds.length-1;const played=currentWeek();const count=played<0?38:played;return count>=tlCupWeeks[kind][index]}
 function tlCupMine(cup){return cup.rounds[cup.rounds.length-1].find(f=>f.home.name===careerClub()||f.away.name===careerClub())}
 function tlCupCredit(amount){const f=financeData();f.balance+=amount;f.budget+=amount;storeFinance(f)}
 function tlCupPlay(){
@@ -2119,7 +2214,7 @@ function tlRestoreCustomClub(){
  if(!saved||!saved.customClub||!saved.club)return;
  const st=careerSeason();
  if(st.number===1){teams[11]=saved.club;}
- else if(Array.isArray(st.clubs)&&st.clubs.length===12){teams.splice(0,teams.length,...st.clubs);}
+ else if(Array.isArray(st.clubs)&&st.clubs.length===20){teams.splice(0,teams.length,...st.clubs);}
 }
 tlRestoreCustomClub();
 const tlCustomPreviousContinue=continueCareer;
@@ -2227,8 +2322,8 @@ openFinances=function(){
  }
  body.appendChild(grid);
  const d=tlDivision(),weekIncome=[20000,78000,510000,4350000][d];
- const annualLeague=11*[12000,45000,300000,2500000][d]+22*([6000,25000,160000,1400000][d]+[2000,8000,50000,450000][d]);
- const annualWages=22*tlWeeklyWages();
+ const annualLeague=19*[12000,45000,300000,2500000][d]+38*([6000,25000,160000,1400000][d]+[2000,8000,50000,450000][d]);
+ const annualWages=38*tlWeeklyWages();
  const forecast=document.createElement('p');forecast.className='ex-note';
  forecast.textContent='Indicative full-season league operating forecast: '+pounds(annualLeague)+' regular income minus '+pounds(annualWages)+' wages = '+(annualLeague-annualWages<0?'-':'')+pounds(Math.abs(annualLeague-annualWages))+'. Cup revenue, transfer fees and season prizes are additional. This is not the club bank balance.';
  body.appendChild(forecast);
@@ -2495,7 +2590,7 @@ advanceSeason=function(){tlSafeAdvance();squadLoad();};
  };
  const resetRuntime=()=>{
   teams.splice(0,teams.length,...tlInitialClubs);
-  leagueMatches=JSON.parse(JSON.stringify(initialSchedule));fixtureWeek=0;
+  leagueMatches=JSON.parse(JSON.stringify(makeSchedule()));fixtureWeek=0;
   squadFormationIndex=0;squadSelected=-1;
   squadPlayers=squadNames.map((p,i)=>({id:i,name:p[0],pos:p[1],age:p[2],rating:p[3]}));
   tacticMentality='Balanced';tacticFlags=[false,false,false,false,false];
@@ -2617,7 +2712,7 @@ openNextMatch=function(){
    if(st.number===1){
     teams.splice(0,teams.length,...tlInitialClubs);
     if(!teams.includes(club))teams[11]=club;
-   }else if(Array.isArray(st.clubs)&&st.clubs.length===12){
+   }else if(Array.isArray(st.clubs)&&st.clubs.length===20){
     teams.splice(0,teams.length,...st.clubs);
    }
    loadMatches();
@@ -2749,7 +2844,7 @@ openNextMatch=function(){
  const renderSide=(node,name,role)=>{node.replaceChildren();const label=document.createElement('div'),rating=document.createElement('strong'),tag=document.createElement('small');label.textContent=name;rating.textContent=String(Math.round(name===careerClub()?tlScoutOurStrength():tlClubStrength(name)));tag.textContent=role;node.append(label,rating,tag)};
  renderSide(left,home,'HOME');renderSide(right,away,'AWAY');
 };
-// After league matches, offer all six results from the completed matchweek.
+// After league matches, offer all ten results from the completed matchweek.
 const tlOldLeagueMatch=playInstantMatch;
 playInstantMatch=function(){
  const before=currentWeek();tlOldLeagueMatch();
@@ -2759,9 +2854,9 @@ playInstantMatch=function(){
  }
 };
 function tlOpenAllResults(){loadMatches();showExtra('tlAllResultsScreen');document.getElementById('tlAllResultsScreen').style.display='flex';tlRenderAllResults()}
-function tlChangeResultWeek(direction){tlResultWeek=(tlResultWeek+direction+22)%22;tlRenderAllResults()}
+function tlChangeResultWeek(direction){tlResultWeek=(tlResultWeek+direction+38)%38;tlRenderAllResults()}
 function tlRenderAllResults(){
- loadMatches();document.getElementById('tlResultWeekLabel').textContent='MATCHWEEK '+(tlResultWeek+1)+' OF 22';
+ loadMatches();document.getElementById('tlResultWeekLabel').textContent='MATCHWEEK '+(tlResultWeek+1)+' OF 38';
  const host=document.getElementById('tlAllResultsGrid');host.replaceChildren();
  for(const m of leagueMatches[tlResultWeek]){
   const el=document.createElement('div');el.className='fl-match'+((teams[m.home]===careerClub()||teams[m.away]===careerClub())?' mine':'');
@@ -3021,8 +3116,8 @@ tlCupPlay=function(){
 function tlAwardEligiblePlayers(players,data){
  const season=seasonLabel();
  const matches=(data.matches||[]).filter(m=>m.season===season);
- // League has 22 fixtures; cup fixtures increase the participation threshold.
- const fixtureCount=Math.max(22,new Set(matches.map(m=>m.id)).size);
+ // League has 38 fixtures; cup fixtures increase the participation threshold.
+ const fixtureCount=Math.max(38,new Set(matches.map(m=>m.id)).size);
  const minimum=Math.ceil(fixtureCount*.70);
  const eligible=players.filter(p=>(p.seasonApps||0)>=minimum);
  // If unusual squad turnover leaves nobody eligible, use the most-used players.
