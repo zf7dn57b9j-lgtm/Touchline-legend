@@ -1921,7 +1921,7 @@ function tlCupPlay(){
  const fixtures=cup.rounds[round];
  for(const f of fixtures){
   if(f.winner)continue;
-  const r=tlCupFixtureScore(f);f.homeGoals=r.hg;f.awayGoals=r.ag;f.winner=r.winner;f.penalties=r.penalties;
+  const r=(window.tlCupCommentaryScore&&f===mine)?{hg:window.tlCupCommentaryScore[0],ag:window.tlCupCommentaryScore[1],winner:window.tlCupCommentaryScore[0]>=window.tlCupCommentaryScore[1]?f.home:f.away,penalties:null}:tlCupFixtureScore(f);f.homeGoals=r.hg;f.awayGoals=r.ag;f.winner=r.winner;f.penalties=r.penalties;
  }
  const won=mine.winner.name===careerClub();
  // Credit National and European Cup goals to existing season/career totals.
@@ -1931,6 +1931,7 @@ function tlCupPlay(){
  const cupScorers=[];
  const cupStarters=squadPlayers.slice(0,11).filter(p=>typeof tlAvailable!=='function'||tlAvailable(p));
  for(const player of cupStarters){tlStatsInit(player);player.seasonApps++;player.careerApps++}
+ if(window.tlCupCommentaryParticipants){const starters=new Set(cupStarters.map(p=>String(p.id)));for(const player of window.tlCupCommentaryParticipants){if(starters.has(String(player.id)))continue;const actual=squadPlayers.find(p=>String(p.id)===String(player.id));if(actual){tlStatsInit(actual);actual.seasonApps++;actual.careerApps++}}}
  for(let i=0;i<cupGoals;i++){
   const scorer=tlChooseScorer(cupStarters);
   cupScorers.push(scorer);
@@ -1976,7 +1977,8 @@ function renderCups(){
   if(!mine.winner&&!cup.eliminated){
    const ready=tlCupWeekReady(kind,cup);
    info.appendChild(make('div','tlc-info',ready?'Cup match ready to play':'Scheduled after league matchweek '+tlCupWeeks[kind][round]));
-   const play=make('button','tlc-button','PLAY CUP MATCH');play.disabled=!ready;play.onclick=tlCupPlay;info.appendChild(play);
+   const play=make('button','tlc-button','INSTANT CUP RESULT');play.disabled=!ready;play.onclick=tlCupPlay;info.appendChild(play);
+   const commentary=make('button','tlc-button','QUICK CUP COMMENTARY');commentary.disabled=!ready;commentary.onclick=()=>tlqStart(kind);info.appendChild(commentary);
   }
  }
  info.appendChild(make('div','tlc-info tlc-gold','Cup earnings this season: '+pounds(cup.earnings)));
@@ -2049,7 +2051,8 @@ function tlShowCupFullTime(data){
  for(const [label,value] of info){const row=make('div','tlmc-stats');row.append(make('span','',value),make('span','',label),make('span','',''));host.appendChild(row)}
  const notes=make('div','tlmc-notes','Cup goals and starting appearances count towards season and career player statistics.');host.appendChild(notes);
  const footer=document.querySelector('#resultsScreen .ex-footer');
- const back=footer.children[1];back.textContent='CUP COMPETITIONS';back.onclick=()=>{tlCupTab=kind;openCups();tlCupTab=kind;renderCups()};
+ const back=footer.children[1];back.textContent='CUP COMPETITIONS';back.onclick=()=>{tlCupTab=kind;openCups()};
+ footer.children[0].textContent='VIEW PLAYER RATINGS';footer.children[0].onclick=tlOpenMatchRatings;
  showExtra('resultsScreen');
  localStorage.setItem('touchlineLastResult_'+careerClub(),host.innerText);
 }
@@ -2963,9 +2966,9 @@ tlCupPlay=function(){
  tlRatingsCupPlay();const cup=tlCupLoad(kind);if(!cup)return;
  const last=cup.history?.[cup.history.length-1];if(last){const id=tlSeason()+'-'+kind+'-'+last.round+'-'+cup.history.length;const data=tlSyncCareerRecords();data.matches||=[];
  if(!data.matches.some(x=>x.id===id)){const home=last.home===careerClub();const gf=home?last.hg:last.ag,ga=home?last.ag:last.hg;data.matches.push({id,season:seasonLabel(),gf,ga,opponent:last.opponent,kind});tlWriteRecords(data);
-  const ratings=tlRateMatch(kind,gf,ga,last.scorers||[],starters);tlStoreRatings(ratings);tlRatingsLine(ratings,last.scorers||[],starters)}
+  const participants=window.tlCupCommentaryParticipants||starters;const ratings=tlRateMatch(kind,gf,ga,last.scorers||[],participants);tlStoreRatings(ratings);tlRatingsLine(ratings,last.scorers||[],participants)}
  }
- if(!before&&cup.champion===careerClub()&&tlRegisterHonour(kind,seasonLabel()))tlShowVictory(kind,seasonLabel(),()=>{showExtra('resultsScreen')});
+ if(!before&&cup.champion===careerClub()&&tlRegisterHonour(kind,seasonLabel()))window.tlPendingCupVictory={kind,season:seasonLabel()};
 };
 /* Ratings-based annual award, with a separate top scorer. Existing awards remain intact. */
 tlPickPlayerOfYear=function(){
@@ -3060,7 +3063,7 @@ tlOpenHistory=function(){
 <style>
 #tlMatchRatingsScreen .ex-art{background:linear-gradient(110deg,#071121e8,#0b1732e9),url('assets/manager-dashboard.png') center/100% 100% no-repeat}
 #tlMatchRatingsScreen .ex-heading{left:25%;width:50%;font-size:2.65cqw}
-#tlMatchRatingsScreen .ex-body{top:15%;height:69%;left:10%;width:80%;padding:1% 2%;overflow:auto}
+#tlMatchRatingsScreen .ex-body{top:19%;height:65%;left:10%;width:80%;padding:1% 2%;overflow:auto}
 #tlMatchRatingsScreen .ex-footer{bottom:2%;height:10%}
 .tl-ratings-grid{display:grid;grid-template-columns:2.6fr .7fr .65fr .7fr;align-items:center;gap:1%;padding:.55% 1.5%;font-size:1.33cqw;background:#1d4c92;border-radius:8px;margin:.3% 0}
 .tl-ratings-grid:nth-child(odd){background:#12366e}
@@ -3076,7 +3079,7 @@ tlOpenHistory=function(){
 let tlLatestMatchRatingRows=[];
 let tlLatestMatchSeason='';
 let tlLatestMatchIsCup=false;
-function tlRatingsLeagueResults(){if(tlLatestMatchIsCup){showExtra('resultsScreen');return}if(typeof tlOpenWeekResults==='function'){tlOpenWeekResults();return}if(typeof openAllLeagueResults==='function'){openAllLeagueResults();return}openLeague()}
+function tlRatingsLeagueResults(){if(tlLatestMatchIsCup){tlCupTab=window.tlLatestCupKind||tlCupTab;openCups();return}if(typeof tlOpenWeekResults==='function'){tlOpenWeekResults();return}if(typeof openAllLeagueResults==='function'){openAllLeagueResults();return}openLeague()}
 const tlOriginalRatingsLine=tlRatingsLine;
 tlRatingsLine=function(ratings,scorers,participants){
  const goals={},assists={};
@@ -3094,7 +3097,7 @@ tlRatingsLine=function(ratings,scorers,participants){
   assists[selected.name]=(assists[selected.name]||0)+1;
  }
  tlLatestMatchRatingRows=(ratings||[]).map(r=>({...r,rating:Math.min(10,Math.round((r.rating+Math.min(.5,(assists[r.name]||0)*.15))*10)/10),goals:goals[r.name]||0,assists:assists[r.name]||0}));
- tlLatestMatchSeason=seasonLabel();tlLatestMatchIsCup=!!document.getElementById('resultsScreen').classList.contains('tlc-result');
+ tlLatestMatchSeason=seasonLabel();tlLatestMatchIsCup=!!document.getElementById('resultsScreen').classList.contains('tlc-result');if(tlLatestMatchIsCup)window.tlLatestCupKind=tlCupTab;
  const data=tlReadRecords();data.ratingSeasons||={};const season=data.ratingSeasons[tlLatestMatchSeason]||{};
  for(const r of tlLatestMatchRatingRows){const key=String(r.id)+'|'+r.name;const item=season[key]||{name:r.name,total:0,apps:0,goals:0,assists:0,motm:0};item.total+=r.rating;item.apps++;item.goals+=r.goals;item.assists=(item.assists||0)+r.assists;season[key]=item}
  const top=tlLatestMatchRatingRows.reduce((a,b)=>!a||b.rating>a.rating?b:a,null);
@@ -3113,8 +3116,12 @@ function tlOpenMatchRatings(){
   const row=document.createElement('div');row.className='tl-ratings-grid'+(top&&p.id===top.id?' tl-ratings-motm':'');
   for(const value of [p.name+(top&&p.id===top.id?' ★ MOTM':''),p.rating.toFixed(1),p.goals,p.assists||0]){const x=document.createElement('span');x.textContent=value;row.appendChild(x)}host.appendChild(row)
  }
+ const footer=document.querySelector('#tlMatchRatingsScreen .ex-footer');
+ if(tlLatestMatchIsCup){footer.children[0].textContent=window.tlPendingCupVictory?'CONTINUE TO TROPHY':'CUP COMPETITIONS';footer.children[0].onclick=tlFinishCupRatings;footer.children[1].textContent='CUP COMPETITIONS';footer.children[1].onclick=tlFinishCupRatings;}
+ else{footer.children[0].textContent='DASHBOARD';footer.children[0].onclick=openDashboard;footer.children[1].textContent='ALL LEAGUE RESULTS';footer.children[1].onclick=tlRatingsLeagueResults;}
  tlShowNewScreen('tlMatchRatingsScreen');
 }
+function tlFinishCupRatings(){const pending=window.tlPendingCupVictory;window.tlPendingCupVictory=null;if(pending){tlShowVictory(pending.kind,pending.season,()=>{tlCupTab=pending.kind;openCups()})}else{tlCupTab=window.tlLatestCupKind||tlCupTab;openCups()}}
 /* The later screens must not remain visible behind earlier screens. */
 const tlSafeShowExtra=showExtra;
 showExtra=function(id){tlSafeShowExtra(id);for(const name of ['tlMatchRatingsScreen','tlTrophyRoom','tlVictoryRoom','tlHistoryScreen']){const el=document.getElementById(name);if(el&&name!==id)el.style.display='none'}};
@@ -3322,14 +3329,14 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
 .tlms-heading{position:absolute;left:25%;top:2%;width:50%;height:10%;border:3px solid #ffd14d;border-radius:35px;background:linear-gradient(#226bc8,#071d50);display:grid;place-items:center;font-size:2.8cqw;font-weight:900}
 .tlms-score{position:absolute;left:8%;top:13%;width:84%;height:5%;text-align:center;font-size:1.55cqw;font-weight:900;color:#ffe17d}
 .tlms-panel{position:absolute;top:20%;height:60%;border:2px solid #ffd14d;border-radius:13px;background:linear-gradient(#16488e,#071b44);padding:.8%;overflow:hidden}
-.tlms-left{left:2%;width:45%}.tlms-right{left:48%;width:30%}.tlms-tactics{left:79%;width:19%}
+.tlms-left{left:2%;width:44%}.tlms-right{left:47%;width:33%}.tlms-tactics{left:81%;width:17%}
 .tlms-label{height:8%;text-align:center;color:#ffe17d;font-size:1.48cqw;font-weight:900}
 .tlms-cols,.tlms-player{display:grid;grid-template-columns:43% 12% 12% 16% 17%;align-items:center;text-align:center}
-.tlms-cols{height:7%;color:#ffe17d;font-size:1.12cqw;font-weight:900}
-.tlms-player{width:100%;height:7.65%;border:0;border-bottom:1px solid #ffffff35;background:#22569c;color:white;font-size:1.18cqw;font-weight:700;cursor:pointer;padding:0 1%}
+.tlms-cols{height:7%;color:#ffe17d;font-size:1.28cqw;font-weight:900}
+.tlms-player{width:100%;height:7.65%;border:0;border-bottom:1px solid #ffffff35;background:#22569c;color:white;font-size:1.43cqw;font-weight:700;cursor:pointer;padding:0 1%}
 .tlms-player:nth-child(even){background:#163d78}.tlms-player.selected{background:#e8bc43;color:#06152a;font-weight:900;outline:2px solid #fff}
 .tlms-player span:first-child{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tlms-right .tlms-player{height:11.5%;font-size:1.10cqw}.tlms-player:disabled{opacity:.4;cursor:not-allowed}
+.tlms-right .tlms-player{height:11.5%;font-size:1.36cqw}.tlms-player:disabled{opacity:.4;cursor:not-allowed}
 .tlms-tactics label{display:block;color:#ffe17d;font-size:1.22cqw;font-weight:900;margin:6% 0 2%}
 .tlms-tactics select{width:100%;font-size:1.25cqw;background:#205da9;color:#fff;border:2px solid #ffd14d;border-radius:8px;padding:5% 2%}
 .tlms-tactics .tlms-tip{font-size:1.12cqw;line-height:1.4;margin-top:8%;color:#d9eaff}
@@ -3419,14 +3426,15 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   refresh();
  }
  function startTimer(){stop();timer=setInterval(tick,850)}
- function begin(){
+ function begin(cupKind){
   if(match)return;
-  const w=currentWeek();if(w<0)return;
+  const w=currentWeek();if(w<0&&!cupKind)return;
   squadLoad();tacticsLoad();
   const unavailable=squadPlayers.slice(0,11).filter(p=>!tlAvailable(p));
   if(unavailable.length){alert('Unavailable starting players: '+unavailable.map(p=>p.name).join(', ')+'. Use Squad Management and Auto Select first.');return}
-  loadMatches();const f=leagueMatches[w].find(x=>teams[x.home]===careerClub()||teams[x.away]===careerClub());if(!f)return;
-  const predicted=baseSim(f,w);
+  let f,predicted,home,away,homeId,awayId;
+  if(cupKind){const cup=tlCupLoad(cupKind);if(!cup||cup.eliminated||cup.champion||!tlCupWeekReady(cupKind,cup))return;f=tlCupMine(cup);if(!f||f.winner)return;const outcome=tlCupFixtureScore(f);predicted=[outcome.hg,outcome.ag];home=f.home.name;away=f.away.name;homeId=-1;awayId=-1;}
+  else{loadMatches();f=leagueMatches[w].find(x=>teams[x.home]===careerClub()||teams[x.away]===careerClub());if(!f)return;predicted=baseSim(f,w);home=teams[f.home];away=teams[f.away];homeId=f.home;awayId=f.away;}
   const events=[];
   // Spread goal events across the match rather than reporting several at one minute.
   const totalGoals=predicted[0]+predicted[1];
@@ -3434,7 +3442,7 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   const goalSides=[...Array(predicted[0]).fill(true),...Array(predicted[1]).fill(false)].sort(()=>Math.random()-.5);
   goalSlots.forEach((minute,i)=>events.push({home:goalSides[i],minute}));
   events.sort((a,b)=>a.minute-b.minute);
-  match={week:w,home:teams[f.home],away:teams[f.away],homeId:f.home,awayId:f.away,score:predicted,events,minute:0,h:0,a:0,paused:false,subs:0,lineup:squadPlayers.slice(0,11).map(p=>({...p})),bench:squadPlayers.slice(11,18).map(p=>({...p})),original:squadPlayers.map(p=>({...p})),used:[],ratings:Object.fromEntries(squadPlayers.slice(0,11).map(p=>[String(p.id),6.5]))};
+  match={week:w,cupKind:cupKind||null,home,away,homeId,awayId,score:predicted,events,minute:0,h:0,a:0,paused:false,subs:0,lineup:squadPlayers.slice(0,11).map(p=>({...p})),bench:squadPlayers.slice(11,18).map(p=>({...p})),original:squadPlayers.map(p=>({...p})),used:[],ratings:Object.fromEntries(squadPlayers.slice(0,11).map(p=>[String(p.id),6.5]))};
   $('tlqHome').textContent=match.home;$('tlqAway').textContent=match.away;$('tlqLog').replaceChildren();note('Up to 5 substitutions. Pause at any time.');
   log("0' Kick-off! "+match.home+' versus '+match.away);
   for(const el of document.querySelectorAll('.screen'))el.style.display='none';$('tlQuickMatch').style.display='flex';refresh();startTimer();
@@ -3467,12 +3475,16 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   const savedRatingsLine=tlRatingsLine,savedStoreRatings=tlStoreRatings;
   tlRatingsLine=function(rows,scorers){return savedRatingsLine(extendRatings(rows),scorers,participants)};
   tlStoreRatings=function(rows){return savedStoreRatings(extendRatings(rows))};
-  try{originalPlay()}finally{
+  try{
+   if(m.cupKind){window.tlCupCommentaryScore=[m.h,m.a];window.tlCupCommentaryParticipants=participants;tlCupTab=m.cupKind;tlCupPlay()}
+   else originalPlay();
+  }finally{
+   window.tlCupCommentaryScore=null;window.tlCupCommentaryParticipants=null;
    tlSimulateFixture=sim;
    tlRatingsLine=savedRatingsLine;
    tlStoreRatings=savedStoreRatings;
   }
-  const box=$('resultsBody');if(box){const rating=document.createElement('div');rating.style.cssText='font-size:1.2cqw;color:#ffe17d;margin-top:1%';rating.textContent='MATCH RATINGS: '+m.lineup.map(p=>p.name+' '+(m.ratings[String(p.id)]??6.5).toFixed(1)).join(' · ');box.appendChild(rating)}
+  
   // Restore the original squad order, retaining every updated player statistic,
   // injury, suspension, contract and other field from the settled match.
   squadLoad();const updated=new Map(squadPlayers.map(p=>[String(p.id),p]));
@@ -3482,7 +3494,7 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   for(const id of initial){if(!selected.has(id)){const p=updated.get(id);if(p){tlStatsInit(p);p.seasonApps++;p.careerApps++}}}
   squadSave();
   $('tlQuickMatch').style.display='none';
-  if(currentWeek()===m.week){alert('Match could not be completed. Your original squad was restored.');openDashboard()}
+  if(!m.cupKind&&currentWeek()===m.week){alert('Match could not be completed. Your original squad was restored.');openDashboard()}
  }
  window.tlqStart=begin;
  window.tlqToggle=function(){if(!match||match.paused)return;if(match.minute===45){note('Select START SECOND HALF to continue.');return}match.paused=!match.paused;if(match.paused){stop();note('Paused — you can change tactics or make substitutions.')}else{note('Match resumed.');startTimer()}refresh()};
@@ -3500,5 +3512,6 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
 })();
 </script>
 
+<style>#resultsScreen .tl-match-ratings{display:none!important}</style>
 </body>
 </html>
