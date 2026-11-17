@@ -2797,5 +2797,53 @@ doTransfer=function(p){
  localStorage.setItem(tlFreeAgentKey(),JSON.stringify(tlFreeAgents().filter(x=>x.id!==p.id)));renderTransfers();
 };
 </script>
+<style>
+/* Focused second-pass improvements: no changes to career or match data. */
+#tlHistoryScreen .ex-body{overflow:auto;padding:1.5% 2%;font-size:1.3cqw}
+#tlHistoryScreen .tl-history-title{font-size:1.65cqw;color:#ffe08a;text-align:center;margin:1.1% 0 .6%;text-transform:uppercase}
+#tlHistoryScreen .tl-history-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2%}
+#tlHistoryScreen .tl-history-item{border:2px solid #c99f36;border-radius:13px;background:linear-gradient(#24599d,#0d2b61);padding:1.2% 2%;font-size:1.2cqw;line-height:1.5;text-align:center}
+#tlHistoryScreen .tl-history-item strong{display:block;font-size:1.45cqw;color:#ffde78}
+#resultsScreen .tlmc-notes{font-size:1.18cqw!important;line-height:1.45;margin-top:.9%}
+#resultsScreen .tlmc-notes>div{margin:.35% 0}
+#resultsScreen.tlc-result .tlmc-stats{border-bottom:0}
+#resultsScreen.tlc-result .tlmc-subtitle{border-bottom:0}
+</style>
+<script>
+// Place History below Cup Matches, away from the Quit Career control.
+(function(){const b=document.querySelector('#dashboardBoard button[aria-label="Club history and awards"]');if(b){b.style.top='13.5%';b.style.right='2%';b.style.height='8%';b.style.width='18%';b.style.zIndex='5';}})();
+// Expiring contracts first; retain original player objects and renewal actions.
+renderContracts=function(){
+ const host=document.getElementById('contractRows');host.replaceChildren();
+ document.getElementById('contractSummary').textContent='WAGES '+pounds(tlWeeklyWages())+' / '+pounds(tlWageBudget())+' PER WEEK · SEASON '+tlSeason();
+ [...squadPlayers].sort((a,b)=>(a.contractUntil-tlSeason())-(b.contractUntil-tlSeason())||a.name.localeCompare(b.name)).forEach(p=>{
+  const row=document.createElement('div');row.className='contract-row';
+  const left=Math.max(0,(p.contractUntil||tlSeason())-tlSeason());
+  [p.name,p.age,p.pos,p.rating,pounds(p.wage),left===0?'EXPIRES THIS SEASON':left+' SEASON'+(left===1?'':'S')].forEach(x=>{const span=document.createElement('span');span.textContent=x;row.appendChild(span)});
+  const button=document.createElement('button');button.textContent='RENEW';button.onclick=()=>tlNegotiate(p);row.appendChild(button);host.appendChild(row);
+ });
+};
+// Show awards in the season review and history; awards are earned only on completion.
+function tlHistoryCard(title,detail){const box=document.createElement('div');box.className='tl-history-item';const h=document.createElement('strong');h.textContent=title;const d=document.createElement('div');d.textContent=detail;box.append(h,d);return box}
+tlOpenHistory=function(){
+ const host=document.getElementById('tlHistoryBody');host.replaceChildren();
+ const st=careerSeason(),history=Array.isArray(st.history)?st.history:[],awards=tlAwardHistory();
+ const heading=t=>{const el=document.createElement('div');el.className='tl-history-title';el.textContent=t;host.appendChild(el)};
+ const grid=items=>{const el=document.createElement('div');el.className='tl-history-grid';items.forEach(x=>el.appendChild(tlHistoryCard(x[0],x[1])));host.appendChild(el)};
+ heading(careerClub()+' · CLUB HONOURS');
+ heading('CAREER RECORDS');
+ grid([['SEASONS COMPLETED',String(history.length)],['HIGHEST FINISH',history.length?String(Math.min(...history.map(x=>x.position)))+' of 12':'—'],['MOST POINTS',history.length?String(Math.max(...history.map(x=>x.points))):'—'],['LEAGUE TITLES',String(history.filter(x=>x.position===1).length)],['PROMOTIONS',String(history.filter(x=>x.position<=2&&x.division<3).length)],['CURRENT DIVISION',seasonDivision()]]);
+ heading('SEASON-BY-SEASON HISTORY');
+ if(history.length)grid([...history].reverse().map(h=>[h.season,(careerDivisionNames[h.division]||'League')+' · '+h.position+' / 12 · '+h.points+' points']));
+ else grid([['FIRST SEASON IN PROGRESS','Finish your first season to record your league position and honours.']]);
+ heading('CLUB PLAYER OF THE YEAR');
+ const years=Object.keys(awards).sort().reverse();
+ if(years.length)grid(years.map(y=>[y+' · '+awards[y].name,awards[y].goals+' goals · '+awards[y].appearances+' appearances']));
+ else grid([['AWARD NOT YET PRESENTED','The winner is announced in the Season Review after your final league match.']]);
+ heading('CUP HONOURS');
+ const cups=['national','europe'].map(kind=>{let count=0;for(let n=1;n<=st.number;n++){try{const cup=JSON.parse(localStorage.getItem('touchlineCup_'+careerClub()+'_season'+n+'_'+kind)||'null');if(cup&&cup.champion===careerClub())count++}catch(e){}}return [kind==='national'?'NATIONAL CUP TITLES':'EUROPEAN CUP TITLES',String(count)]});
+ grid(cups);showExtra('tlHistoryScreen');
+};
+</script>
 </body>
 </html>
