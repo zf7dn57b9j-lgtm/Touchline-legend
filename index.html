@@ -2845,5 +2845,156 @@ tlOpenHistory=function(){
  grid(cups);showExtra('tlHistoryScreen');
 };
 </script>
+
+<style>
+/* Trophy Cabinet: same 16:9 art, navy-and-gold UI as the existing game. */
+#tlTrophyRoom,#tlVictoryRoom{display:none;background:#06152a}
+.tl-trophy-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;overflow:hidden;container-type:inline-size;color:#fff;background:url('assets/trophy-cabinet.png') center/100% 100% no-repeat}
+.tl-trophy-title{position:absolute;top:2%;left:23%;width:54%;height:10%;display:grid;place-items:center;border:3px solid #ffd45b;border-radius:30px;background:linear-gradient(#2468bb,#061c4b);font-size:3.1cqw;font-weight:900;text-shadow:2px 2px #000}
+.tl-trophy-grid{position:absolute;left:24%;top:29%;width:52%;height:31%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:3%;overflow:auto}
+.tl-trophy{border:2px solid #ffdc73;border-radius:10px;background:#102c65dc;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2%;font-weight:900;font-size:1.05cqw;padding:2%;text-align:center}
+.tl-trophy .cup{font-size:3.2cqw;line-height:1}.tl-trophy small{font-size:.8cqw;color:#ffe4a0}
+.tl-trophy-empty{grid-column:1/-1;align-self:center;text-align:center;background:#071b45dd;border:2px solid #ffce42;border-radius:15px;padding:4%;font-size:1.8cqw}
+.tl-trophy-footer{position:absolute;bottom:2%;left:21%;width:58%;height:10%;display:flex;gap:4%}
+.tl-trophy-footer button,.tl-victory-continue{flex:1;border:3px solid #ffd45b;border-radius:16px;background:linear-gradient(#2366bc,#08265f);color:white;font-size:1.7cqw;font-weight:900;cursor:pointer}
+.tl-victory-panel{position:absolute;left:16%;top:15%;width:68%;height:66%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2%;border:4px solid #ffd45b;border-radius:25px;background:linear-gradient(#113c80ed,#061b42ef);text-align:center;text-shadow:2px 3px #000}
+.tl-victory-panel .tl-victory-cup{font-size:9cqw}.tl-victory-panel h2{font-size:3.8cqw;color:#ffe07c;margin:0}.tl-victory-panel p{font-size:2.2cqw;margin:0}.tl-victory-continue{position:absolute;bottom:3%;left:30%;width:40%;height:10%}
+.tl-match-ratings{font-size:1.03cqw;margin-top:.6%;color:#ffe1a0;line-height:1.5}
+#tlHistoryScreen .tl-cabinet-entry{display:block;margin:1% auto 2%;padding:1% 4%;border:2px solid #ffd45b;border-radius:12px;background:linear-gradient(#2368c4,#092759);color:white;font-size:1.6cqw;font-weight:900;cursor:pointer}
+</style>
+<section id="tlTrophyRoom" class="screen"><div class="tl-trophy-art"><div class="tl-trophy-title">TROPHY CABINET</div><div id="tlTrophyGrid" class="tl-trophy-grid"></div><div class="tl-trophy-footer"><button onclick="tlOpenHistory()">CLUB HISTORY</button><button onclick="openDashboard()">DASHBOARD</button></div></div></section>
+<section id="tlVictoryRoom" class="screen"><div class="tl-trophy-art"><div class="tl-victory-panel"><div class="tl-victory-cup">🏆</div><h2 id="tlVictoryHeading">CHAMPIONS!</h2><p id="tlVictoryClub"></p><p id="tlVictoryDetail"></p></div><button class="tl-victory-continue" onclick="tlCloseVictory()">CONTINUE CAREER</button></div></section>
+<script>
+/* Each new key starts with touchline, so the four-career snapshot system saves it. */
+function tlLegacyRecordKey(){return 'touchlineClubRecords_'+careerClub()}
+function tlReadRecords(){try{return JSON.parse(localStorage.getItem(tlLegacyRecordKey())||'null')||{matches:[],players:{},honours:[],attendance:[]}}catch(e){return {matches:[],players:{},honours:[],attendance:[]}}}
+function tlWriteRecords(data){localStorage.setItem(tlLegacyRecordKey(),JSON.stringify(data))}
+function tlRecordPlayer(p){return String(p.id)+'|'+p.name}
+function tlSyncCareerRecords(){
+ const data=tlReadRecords();data.players||={};squadLoad();
+ for(const p of squadPlayers){const k=tlRecordPlayer(p),old=data.players[k]||{name:p.name,apps:0,goals:0};old.name=p.name;old.apps=Math.max(old.apps,p.careerApps||0);old.goals=Math.max(old.goals,p.careerGoals||0);data.players[k]=old}
+ tlWriteRecords(data);return data;
+}
+function tlRegisterHonour(kind,season){
+ const data=tlReadRecords();data.honours||=[];
+ if(!data.honours.some(x=>x.kind===kind&&x.season===season)){data.honours.push({kind,season});tlWriteRecords(data);return true}return false;
+}
+function tlHonours(){
+ const data=tlReadRecords(),list=[...(data.honours||[])];const st=careerSeason();
+ for(const h of st.history||[]){if(h.position===1&&!list.some(x=>x.kind==='league'&&x.season===h.season))list.push({kind:'league',season:h.season})}
+ for(let n=1;n<=st.number;n++)for(const kind of ['national','europe']){
+  try{const cup=JSON.parse(localStorage.getItem('touchlineCup_'+careerClub()+'_season'+n+'_'+kind)||'null');
+   if(cup&&cup.champion===careerClub()){const y=2026+n-1,season=y+'/'+String((y+1)%100).padStart(2,'0');if(!list.some(x=>x.kind===kind&&x.season===season))list.push({kind,season})}}
+  catch(e){}
+ }
+ return list.sort((a,b)=>b.season.localeCompare(a.season));
+}
+function tlHonourName(kind){return kind==='league'?'LEAGUE CHAMPIONS':kind==='national'?'NATIONAL CUP WINNERS':'EUROPEAN CUP WINNERS'}
+function tlShowNewScreen(id){for(const el of document.querySelectorAll('.screen'))el.style.display='none';document.getElementById(id).style.display='flex'}
+function tlOpenTrophyCabinet(){
+ const host=document.getElementById('tlTrophyGrid');host.replaceChildren();const honours=tlHonours();
+ if(!honours.length){const empty=document.createElement('div');empty.className='tl-trophy-empty';empty.textContent='Your cabinet is waiting for its first trophy!';host.appendChild(empty)}
+ for(const h of honours){const b=document.createElement('button');b.className='tl-trophy';const cup=document.createElement('span');cup.className='cup';cup.textContent='🏆';const name=document.createElement('span');name.textContent=tlHonourName(h.kind);const year=document.createElement('small');year.textContent=h.season;b.append(cup,name,year);b.onclick=()=>alert(careerClub()+'\n'+tlHonourName(h.kind)+'\nSeason '+h.season);host.appendChild(b)}
+ tlShowNewScreen('tlTrophyRoom');
+}
+let tlVictoryReturn=null;
+function tlShowVictory(kind,season,returnFn){tlVictoryReturn=returnFn||openDashboard;document.getElementById('tlVictoryHeading').textContent='CONGRATULATIONS!';document.getElementById('tlVictoryClub').textContent=careerClub();document.getElementById('tlVictoryDetail').textContent=tlHonourName(kind)+' · '+season;tlShowNewScreen('tlVictoryRoom')}
+function tlCloseVictory(){const fn=tlVictoryReturn||openDashboard;tlVictoryReturn=null;fn()}
+const tlRecordsDashboard=openDashboard;
+openDashboard=function(){document.getElementById('tlTrophyRoom').style.display='none';document.getElementById('tlVictoryRoom').style.display='none';tlRecordsDashboard()};
+const tlRecordsHistory=tlOpenHistory;
+tlOpenHistory=function(){tlRecordsHistory();
+ const host=document.getElementById('tlHistoryBody');
+ const button=document.createElement('button');button.className='tl-cabinet-entry';button.textContent='🏆 VISIT TROPHY CABINET';button.onclick=tlOpenTrophyCabinet;host.prepend(button);
+ const records=tlSyncCareerRecords(),players=Object.values(records.players||{}),matches=records.matches||[],att=records.attendance||[];
+ const sortedGoals=[...players].sort((a,b)=>b.goals-a.goals),sortedApps=[...players].sort((a,b)=>b.apps-a.apps);
+ const biggestWin=[...matches].filter(x=>x.gf>x.ga).sort((a,b)=>(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf)[0];
+ const biggestLoss=[...matches].filter(x=>x.gf<x.ga).sort((a,b)=>(b.ga-b.gf)-(a.ga-a.gf)||b.ga-a.gf)[0];
+ const heading=document.createElement('div');heading.className='tl-history-title';heading.textContent='ALL-TIME CLUB RECORDS';host.appendChild(heading);
+ const grid=document.createElement('div');grid.className='tl-history-grid';host.appendChild(grid);
+ const cards=[['RECORD GOALSCORER',sortedGoals[0]?.goals?sortedGoals[0].name+' · '+sortedGoals[0].goals+' goals':'No goals recorded'],['MOST APPEARANCES',sortedApps[0]?.apps?sortedApps[0].name+' · '+sortedApps[0].apps+' matches':'No appearances recorded'],['BIGGEST WIN',biggestWin?biggestWin.gf+'–'+biggestWin.ga+' vs '+biggestWin.opponent+' ('+biggestWin.season+')':'Not recorded'],['BIGGEST DEFEAT',biggestLoss?biggestLoss.gf+'–'+biggestLoss.ga+' vs '+biggestLoss.opponent+' ('+biggestLoss.season+')':'Not recorded'],['RECORD HOME CROWD',att.length?Math.max(...att.map(x=>x.crowd)).toLocaleString('en-GB')+' supporters':'Not yet recorded'],['AVERAGE HOME CROWD',att.length?Math.round(att.reduce((n,x)=>n+x.crowd,0)/att.length).toLocaleString('en-GB'):'Not yet recorded']];
+ for(const [title,detail] of cards)grid.appendChild(tlHistoryCard(title,detail));
+ const awardTitle=document.createElement('div');awardTitle.className='tl-history-title';awardTitle.textContent='SEASON TOP GOALSCORERS';host.appendChild(awardTitle);
+ const awards=tlAwardHistory();const years=Object.keys(awards).sort().reverse();const awardGrid=document.createElement('div');awardGrid.className='tl-history-grid';host.appendChild(awardGrid);
+ for(const y of years){const a=awards[y];awardGrid.appendChild(tlHistoryCard(y,a.topScorer?a.topScorer+' · '+a.topGoals+' goals':'Not recorded for this season'))}
+ if(!years.length)awardGrid.appendChild(tlHistoryCard('FIRST SEASON','Top goalscorer awarded when the season finishes'));
+};
+/* Match performance: defenders and keepers earn ratings for team defensive work; goals help but do not dominate. */
+function tlRateMatch(kind,scoreFor,scoreAgainst,scorerNames,participants){
+ const players=participants||[];const scores={};for(const name of scorerNames||[])scores[name]=(scores[name]||0)+1;
+ const clean=scoreAgainst===0,win=scoreFor>scoreAgainst,draw=scoreFor===scoreAgainst;
+ const results=[];
+ for(const p of players){const key=p.id+'|'+p.name;const seed=(p.rating||65)*17+(p.careerApps||0)*11+(scoreFor+3)*23+(scoreAgainst+7)*31+(tlSeason()*37);
+  const variation=((seed%19)-9)/20;const defensive=p.pos==='GK'||['DC','DL','DR'].includes(p.pos);
+  const raw=6.3+(win?.7:draw?.2:-.35)+variation+(defensive?(clean?1.25:scoreAgainst>2?-.7:.15):.1)+Math.min(1.5,(scores[p.name]||0)*.7);
+  const rating=Math.max(4,Math.min(10,Math.round(raw*10)/10));results.push({name:p.name,id:p.id,rating});
+ }
+ return results;
+}
+function tlStoreRatings(ratings){
+ if(!ratings.length)return;
+ const data=tlReadRecords();data.ratings||={};
+ for(const r of ratings){const key=String(r.id)+'|'+r.name;const row=data.ratings[key]||{name:r.name,total:0,apps:0};row.total+=r.rating;row.apps++;data.ratings[key]=row}
+ tlWriteRecords(data);
+}
+function tlRatingsLine(ratings){const host=document.getElementById('resultsBody');if(!host||!ratings.length)return;const d=document.createElement('div');d.className='tl-match-ratings';d.textContent='PLAYER RATINGS · '+ratings.map(p=>p.name.split(' ').slice(-1)[0]+' '+p.rating.toFixed(1)).join('  ·  ');host.appendChild(d)}
+const tlRatingsLeaguePlay=playInstantMatch;
+playInstantMatch=function(){
+ const before=currentWeek();if(before<0)return tlRatingsLeaguePlay();
+ squadLoad();const starters=squadPlayers.slice(0,11).map(p=>({...p}));
+ loadMatches();const fixture=leagueMatches[before]?.find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());
+ const isHome=fixture&&teams[fixture.home]===careerClub(),opponent=fixture?(isHome?teams[fixture.away]:teams[fixture.home]):'';
+ tlRatingsLeaguePlay();if(currentWeek()===before)return;
+ loadMatches();const completed=leagueMatches[before]?.find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());if(!completed)return;
+ const gf=isHome?completed.homeGoals:completed.awayGoals,ga=isHome?completed.awayGoals:completed.homeGoals;
+ squadLoad();const scorers=[];for(const p of squadPlayers){const prior=starters.find(s=>s.id===p.id);if(prior)for(let i=0;i<Math.max(0,(p.careerGoals||0)-(prior.careerGoals||0));i++)scorers.push(p.name)}
+ const ratings=tlRateMatch('league',gf,ga,scorers,starters);tlStoreRatings(ratings);tlRatingsLine(ratings);
+ const data=tlSyncCareerRecords();data.matches||=[];const id=tlSeason()+'-league-'+before;
+ if(!data.matches.some(m=>m.id===id))data.matches.push({id,season:seasonLabel(),gf,ga,opponent,kind:'league'});
+ if(isHome){data.attendance||=[];const ledger=tlIncomeData();const entry=ledger.weeks?.find(x=>x.week===before+1);if(entry&&!data.attendance.some(x=>x.id===id)){
+  // Ticket revenue was already simulated by the game; £20 average ticket is a new estimate, not a historical claim.
+  data.attendance.push({id,crowd:Math.round((entry.tickets||0)/20),season:seasonLabel(),opponent});
+ }}tlWriteRecords(data);
+};
+const tlRatingsCupPlay=tlCupPlay;
+tlCupPlay=function(){
+ const kind=tlCupTab,old=tlCupLoad(kind),before=old?.champion;
+ squadLoad();const starters=squadPlayers.slice(0,11).map(p=>({...p}));
+ tlRatingsCupPlay();const cup=tlCupLoad(kind);if(!cup)return;
+ const last=cup.history?.[cup.history.length-1];if(last){const id=tlSeason()+'-'+kind+'-'+last.round+'-'+cup.history.length;const data=tlSyncCareerRecords();data.matches||=[];
+ if(!data.matches.some(x=>x.id===id)){const home=last.home===careerClub();const gf=home?last.hg:last.ag,ga=home?last.ag:last.hg;data.matches.push({id,season:seasonLabel(),gf,ga,opponent:last.opponent,kind});tlWriteRecords(data);
+  const ratings=tlRateMatch(kind,gf,ga,last.scorers||[],starters);tlStoreRatings(ratings);tlRatingsLine(ratings)}
+ }
+ if(!before&&cup.champion===careerClub()&&tlRegisterHonour(kind,seasonLabel()))tlShowVictory(kind,seasonLabel(),()=>{showExtra('resultsScreen')});
+};
+/* Ratings-based annual award, with a separate top scorer. Existing awards remain intact. */
+tlPickPlayerOfYear=function(){
+ squadLoad();const data=tlReadRecords(),ratings=data.ratings||{};
+ return [...squadPlayers].filter(p=>(p.seasonApps||0)>0).sort((a,b)=>{
+  const ar=ratings[String(a.id)+'|'+a.name],br=ratings[String(b.id)+'|'+b.name];
+  const av=ar?.apps?ar.total/ar.apps:6,bv=br?.apps?br.total/br.apps:6;
+  return (bv+Math.min(1,(b.seasonApps||0)/20))-(av+Math.min(1,(a.seasonApps||0)/20))||b.rating-a.rating;
+ })[0]||null;
+};
+const tlRatingsRecordAward=tlRecordAward;
+tlRecordAward=function(){
+ const year=seasonLabel(),awards=tlAwardHistory();if(awards[year])return awards[year];
+ const data=tlReadRecords(),ratings=data.ratings||{};squadLoad();const players=squadPlayers.filter(p=>(p.seasonApps||0)>0);if(!players.length)return tlRatingsRecordAward();
+ const winner=[...players].sort((a,b)=>{const ar=ratings[String(a.id)+'|'+a.name],br=ratings[String(b.id)+'|'+b.name];const av=ar?.apps?ar.total/ar.apps:6,bv=br?.apps?br.total/br.apps:6;return bv-av||b.seasonApps-a.seasonApps})[0];
+ const scorer=[...players].sort((a,b)=>(b.seasonGoals||0)-(a.seasonGoals||0)||b.seasonApps-a.seasonApps)[0];
+ const row=ratings[String(winner.id)+'|'+winner.name];const award={name:winner.name,goals:winner.seasonGoals||0,appearances:winner.seasonApps||0,rating:row?.apps?Number((row.total/row.apps).toFixed(2)):null,topScorer:scorer.name,topGoals:scorer.seasonGoals||0};
+ awards[year]=award;localStorage.setItem(tlAwardKey(),JSON.stringify(awards));return award;
+};
+const tlRatingsSeasonReview=openSeasonReview;
+openSeasonReview=function(){
+ tlRatingsSeasonReview();if(currentWeek()>=0)return;
+ const awards=tlRecordAward();if(awards){const body=document.getElementById('seasonBody');const row=document.createElement('div');row.className='season-highlight';row.textContent='TOP GOALSCORER: '+awards.topScorer+' · '+awards.topGoals+' goals';body.appendChild(row)}
+ const rank=finalSeasonTable().findIndex(x=>x.name===careerClub())+1;
+ if(rank===1){const key='touchlineCelebration_'+careerClub()+'_'+seasonLabel();if(!localStorage.getItem(key)){localStorage.setItem(key,'1');tlRegisterHonour('league',seasonLabel());tlShowVictory('league',seasonLabel(),()=>tlShowNewScreen('seasonScreen'))}}
+};
+const tlRatingsAdvance=advanceSeason;
+advanceSeason=function(){if(currentWeek()<0){tlSyncCareerRecords();tlRecordAward()}const before=tlSeason();tlRatingsAdvance();if(tlSeason()!==before){const data=tlReadRecords();data.ratings={};tlWriteRecords(data)}};
+</script>
+
 </body>
 </html>
