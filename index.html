@@ -3607,9 +3607,9 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
 <script id="tlScoutingCentreFeature">
 (function(){
  'use strict';
- const ranks=[{name:'Local Scout',min:40,max:54,wage:400},{name:'Regional Scout',min:55,max:69,wage:1000},{name:'National Scout',min:70,max:84,wage:2500},{name:'International Scout',min:85,max:94,wage:5000},{name:'World-Class Scout',min:95,max:99,wage:8500}];
+ const ranks=[{name:'Local Scout',min:40,max:54,wage:1500},{name:'Regional Scout',min:55,max:69,wage:4000},{name:'National Scout',min:70,max:84,wage:10000},{name:'International Scout',min:85,max:94,wage:25000},{name:'World-Class Scout',min:95,max:99,wage:50000}];
  const key=()=> 'touchlineScout_'+careerClub();
- function get(){let x=null;try{x=JSON.parse(localStorage.getItem(key())||'null')}catch(e){}return x&&typeof x==='object'?x:{scout:null,report:null,lastReport:-1,shortlist:[]};}
+ function get(){let x=null;try{x=JSON.parse(localStorage.getItem(key())||'null')}catch(e){}if(!x||typeof x!=='object')return {scout:null,report:null,lastReport:-1,shortlist:[]};if(x.scout&&!x.scout.balanceV2){const rank=ranks.find(r=>r.name===x.scout.name);if(rank){x.scout.wage=rank.wage;x.scout.balanceV2=true;localStorage.setItem(key(),JSON.stringify(x));}}return x;}
  function save(x){localStorage.setItem(key(),JSON.stringify(x));}
  function scoutWage(){const x=get();return x.scout?Number(x.scout.wage)||0:0;}
  const oldWages=tlWeeklyWages;
@@ -3617,15 +3617,15 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
  function completed(){loadMatches();return leagueMatches.filter(w=>w.some(m=>(teams[m.home]===careerClub()||teams[m.away]===careerClub())&&Number.isInteger(m.homeGoals)&&Number.isInteger(m.awayGoals))).length;}
  function discover(x,week){
   const scout=x.scout,quality=scout.rating;
-  const d=tlDivision(),base=[59,66,74,81][d];
-  // Club level sets the baseline, but scout quality raises both the ceiling
-  // and the chance of finding players above the current squad's strength.
-  const skill=(quality-40)/59;
-  const luck=Math.random();
-  const exceptional=luck < (.015 + skill*.12);
-  const boost=exceptional?14+Math.floor(Math.random()*13):Math.floor(Math.random()*(7+Math.round(skill*13)));
-  const rating=Math.max(55,Math.min(96,base-3+Math.floor(Math.random()*10)+Math.floor(skill*8)+(exceptional?Math.floor(Math.random()*7):0)));
-  const truePotential=Math.min(99,Math.max(rating,base+boost+Math.floor(skill*10)));
+  // tlScoutBalanceV2: scout rating is skill, NEVER a player-rating cap.
+  const available=squadPlayers.filter(p=>p&&Number.isFinite(Number(p.rating)));
+  const average=available.length?available.reduce((sum,p)=>sum+Number(p.rating),0)/available.length:[65,72,79,86][tlDivision()];
+  const skill=Math.max(0,Math.min(1,(quality-40)/59));
+  const exceptional=Math.random()<(.025+skill*.15);
+  const offset=Math.floor(Math.random()*(11+Math.round(skill*10)))-5+Math.round(skill*5);
+  const rating=Math.max(55,Math.min(99,Math.round(average+offset+(exceptional?7+Math.floor(Math.random()*12):0))));
+  const growth=3+Math.floor(Math.random()*12)+Math.round(skill*9)+(exceptional?8:0);
+  const truePotential=Math.max(rating,Math.min(99,rating+growth));
   const error=Math.max(2,Math.round(19-skill*17));
   const low=Math.max(rating,truePotential-error),high=Math.min(99,truePotential+error);
   const first=['Oliver','Jacob','Lewis','Freddie','Archie','Noah','Theo','Harry','Ethan','Sam','Max','Isaac','Luca','George'];
@@ -3688,6 +3688,7 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
     save(a);renderTransfers();
    });
   });
+  line('SCOUT RATINGS MEASURE SCOUTING ABILITY, NOT PLAYER RATINGS. EVEN LOCAL SCOUTS CAN FIND FUTURE STARS.');
   line('HIRE OR REPLACE YOUR SCOUT · BETTER SCOUTS GIVE NARROWER POTENTIAL ESTIMATES');
   for(const r of ranks){const wrap=document.createElement('div');wrap.className='tl-scout-option';const label=document.createElement('span');label.textContent=r.name+' · rating '+r.min+'–'+r.max+' · '+pounds(r.wage)+'/week';wrap.appendChild(label);btn(x.scout&&x.scout.name===r.name?'EMPLOYED':'HIRE',()=>{const a=get();const available=tlWageBudget()-tlWeeklyWages()+(a.scout?Number(a.scout.wage)||0:0);if(r.wage>available)return alert('Not enough wage budget. Available after replacing current scout: '+pounds(Math.max(0,available))+'/week.');if(!confirm('Hire '+r.name+' for '+pounds(r.wage)+'/week?'))return;const rating=r.min+Math.floor(Math.random()*(r.max-r.min+1));a.scout={name:r.name,rating,wage:r.wage};save(a);renderTransfers();},wrap);panel.appendChild(wrap);}
   if(x.scout)btn('RELEASE SCOUT',()=>{if(!confirm('Release your scout and stop future reports?'))return;const a=get();a.scout=null;save(a);renderTransfers();});
@@ -3752,6 +3753,7 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
    const t=node.textContent||'';
    if(node.classList.contains('tl-scout-option')){hiring.appendChild(node);return;}
    if(t.startsWith('HIRE OR REPLACE'))return;
+   if(t.startsWith('SCOUT RATINGS MEASURE')){node.className='tl-sc-line';node.style.fontSize='1.05cqw';hiring.appendChild(node);return;}
    if(t.startsWith('SHARED WEEKLY WAGES')||t.startsWith('EMPLOYED:')||t.startsWith('NO SCOUT EMPLOYED')||t.startsWith('NEXT REPORT:')||t.startsWith('NEW PLAYER REPORT AVAILABLE')){
     node.className='tl-sc-line';summary.appendChild(node);return;
    }
