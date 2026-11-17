@@ -2948,7 +2948,7 @@ playInstantMatch=function(){
  loadMatches();const completed=leagueMatches[before]?.find(m=>teams[m.home]===careerClub()||teams[m.away]===careerClub());if(!completed)return;
  const gf=isHome?completed.homeGoals:completed.awayGoals,ga=isHome?completed.awayGoals:completed.homeGoals;
  squadLoad();const scorers=[];for(const p of squadPlayers){const prior=starters.find(s=>s.id===p.id);if(prior)for(let i=0;i<Math.max(0,(p.careerGoals||0)-(prior.careerGoals||0));i++)scorers.push(p.name)}
- const ratings=tlRateMatch('league',gf,ga,scorers,starters);tlStoreRatings(ratings);tlRatingsLine(ratings);
+ const ratings=tlRateMatch('league',gf,ga,scorers,starters);tlStoreRatings(ratings);tlRatingsLine(ratings,scorers,starters);
  const data=tlSyncCareerRecords();data.matches||=[];const id=tlSeason()+'-league-'+before;
  if(!data.matches.some(m=>m.id===id))data.matches.push({id,season:seasonLabel(),gf,ga,opponent,kind:'league'});
  if(isHome){data.attendance||=[];const ledger=tlIncomeData();const entry=ledger.weeks?.find(x=>x.week===before+1);if(entry&&!data.attendance.some(x=>x.id===id)){
@@ -2963,7 +2963,7 @@ tlCupPlay=function(){
  tlRatingsCupPlay();const cup=tlCupLoad(kind);if(!cup)return;
  const last=cup.history?.[cup.history.length-1];if(last){const id=tlSeason()+'-'+kind+'-'+last.round+'-'+cup.history.length;const data=tlSyncCareerRecords();data.matches||=[];
  if(!data.matches.some(x=>x.id===id)){const home=last.home===careerClub();const gf=home?last.hg:last.ag,ga=home?last.ag:last.hg;data.matches.push({id,season:seasonLabel(),gf,ga,opponent:last.opponent,kind});tlWriteRecords(data);
-  const ratings=tlRateMatch(kind,gf,ga,last.scorers||[],starters);tlStoreRatings(ratings);tlRatingsLine(ratings)}
+  const ratings=tlRateMatch(kind,gf,ga,last.scorers||[],starters);tlStoreRatings(ratings);tlRatingsLine(ratings,last.scorers||[],starters)}
  }
  if(!before&&cup.champion===careerClub()&&tlRegisterHonour(kind,seasonLabel()))tlShowVictory(kind,seasonLabel(),()=>{showExtra('resultsScreen')});
 };
@@ -2994,6 +2994,129 @@ openSeasonReview=function(){
 };
 const tlRatingsAdvance=advanceSeason;
 advanceSeason=function(){if(currentWeek()<0){tlSyncCareerRecords();tlRecordAward()}const before=tlSeason();tlRatingsAdvance();if(tlSeason()!==before){const data=tlReadRecords();data.ratings={};tlWriteRecords(data)}};
+</script>
+
+
+<style>
+/* Club history: fixed navigation, compact panels and visible trophy access. */
+#tlHistoryScreen .ex-body{overflow:hidden;padding:1.1% 1.5%;display:flex;flex-direction:column;gap:1%;}
+#tlHistoryScreen .tl-history-toolbar{display:flex;gap:1%;flex:0 0 12%;min-height:0}
+#tlHistoryScreen .tl-history-toolbar button{flex:1;min-width:0;border:2px solid #ffcf52;border-radius:12px;background:linear-gradient(#246bc4,#09265d);color:white;font-size:1.25cqw;font-weight:900;cursor:pointer}
+#tlHistoryScreen .tl-history-toolbar button.active{background:linear-gradient(#e9b743,#a36b0a);color:#08152c}
+#tlHistoryScreen .tl-history-toolbar button.cabinet{background:linear-gradient(#1f9b4b,#07532c);color:white}
+#tlHistoryScreen .tl-history-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+#tlHistoryScreen .tl-history-title{margin:1% 0;font-size:1.5cqw}
+#tlHistoryScreen .tl-history-grid{gap:1%}
+#tlHistoryScreen .tl-history-item{padding:1.2%;font-size:1.16cqw}
+#tlHistoryScreen .tl-history-item strong{font-size:1.32cqw}
+</style>
+<script>
+// Replace the long scrolling history with four clearly separated views.
+// Existing career, award, match, trophy and storage logic is unchanged.
+let tlHistoryActiveTab='overview';
+function tlHistoryView(tab){tlHistoryActiveTab=tab;tlOpenHistory()}
+tlOpenHistory=function(){
+ const host=document.getElementById('tlHistoryBody');host.replaceChildren();host.scrollTop=0;
+ const toolbar=document.createElement('div');toolbar.className='tl-history-toolbar';
+ for(const [key,label] of [['overview','OVERVIEW'],['seasons','SEASONS'],['awards','AWARDS'],['records','RECORDS']]){
+  const b=document.createElement('button');b.textContent=label;b.className=key===tlHistoryActiveTab?'active':'';b.onclick=()=>tlHistoryView(key);toolbar.appendChild(b);
+ }
+ const cabinet=document.createElement('button');cabinet.className='cabinet';cabinet.textContent='🏆 TROPHIES';cabinet.onclick=tlOpenTrophyCabinet;toolbar.appendChild(cabinet);host.appendChild(toolbar);
+ const content=document.createElement('div');content.className='tl-history-content';host.appendChild(content);
+ const heading=t=>{const e=document.createElement('div');e.className='tl-history-title';e.textContent=t;content.appendChild(e)};
+ const grid=items=>{const e=document.createElement('div');e.className='tl-history-grid';for(const [a,b] of items)e.appendChild(tlHistoryCard(a,String(b)));content.appendChild(e)};
+ const st=careerSeason(),history=Array.isArray(st.history)?st.history:[],awards=tlAwardHistory();
+ const honours=tlHonours();
+ if(tlHistoryActiveTab==='overview'){
+  heading(careerClub()+' · '+seasonDivision());
+  grid([['SEASONS COMPLETED',history.length],['LEAGUE TITLES',history.filter(h=>h.position===1).length],['CUP TROPHIES',honours.filter(h=>h.kind!=='league').length],['HIGHEST FINISH',history.length?Math.min(...history.map(h=>h.position))+' of 12':'—']]);
+  heading('RECENT HONOURS');
+  grid(honours.length?honours.slice(0,4).map(h=>[tlHonourName(h.kind),h.season]):[['TROPHY CABINET','Your trophies will appear here when you win competitions']]);
+  heading('LATEST SEASON');
+  const last=history[history.length-1];grid(last?[[last.season,(careerDivisionNames[last.division]||'League')+' · '+last.position+' of 12 · '+last.points+' points']]:[['CURRENT SEASON','No completed seasons yet']]);
+ }else if(tlHistoryActiveTab==='seasons'){
+  heading('SEASON-BY-SEASON RESULTS');
+  grid(history.length?[...history].reverse().map(h=>[h.season,(careerDivisionNames[h.division]||'League')+' · '+h.position+' of 12 · '+h.points+' points']):[['FIRST SEASON','Complete a season to see your results']]);
+ }else if(tlHistoryActiveTab==='awards'){
+  heading('CLUB PLAYER OF THE YEAR');
+  const years=Object.keys(awards).sort().reverse();
+  grid(years.length?years.map(y=>[y+' · '+awards[y].name,(awards[y].rating!=null?'Average rating '+awards[y].rating+' · ':'')+(awards[y].appearances||0)+' appearances']):[['AWARDS','Presented at the end of each completed season']]);
+  heading('SEASON TOP GOALSCORERS');
+  grid(years.length?years.map(y=>[y,awards[y].topScorer?awards[y].topScorer+' · '+awards[y].topGoals+' goals':'Not recorded for this season']):[['GOALSCORERS','Recorded at the end of each season']]);
+ }else{
+  heading('ALL-TIME CLUB RECORDS');
+  const data=tlSyncCareerRecords(),players=Object.values(data.players||{}),matches=data.matches||[],att=data.attendance||[];
+  const goals=[...players].sort((a,b)=>b.goals-a.goals)[0],apps=[...players].sort((a,b)=>b.apps-a.apps)[0];
+  const win=[...matches].filter(x=>x.gf>x.ga).sort((a,b)=>(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf)[0];
+  const loss=[...matches].filter(x=>x.gf<x.ga).sort((a,b)=>(b.ga-b.gf)-(a.ga-a.gf)||b.ga-a.gf)[0];
+  grid([['RECORD GOALSCORER',goals?.goals?goals.name+' · '+goals.goals+' goals':'Not recorded'],['MOST APPEARANCES',apps?.apps?apps.name+' · '+apps.apps+' matches':'Not recorded'],['BIGGEST WIN',win?win.gf+'–'+win.ga+' vs '+win.opponent:'Not recorded'],['BIGGEST DEFEAT',loss?loss.gf+'–'+loss.ga+' vs '+loss.opponent:'Not recorded'],['RECORD HOME CROWD',att.length?Math.max(...att.map(x=>x.crowd)).toLocaleString('en-GB'):'Not recorded'],['AVERAGE HOME CROWD',att.length?Math.round(att.reduce((n,x)=>n+x.crowd,0)/att.length).toLocaleString('en-GB'):'Not recorded']]);
+ }
+ content.scrollTop=0;showExtra('tlHistoryScreen');
+};
+// Keep history away from the cup-match shortcut and original dashboard controls.
+(function(){const b=document.querySelector('#dashboardBoard button[aria-label="Club history and awards"]');if(b){b.style.left='2%';b.style.right='auto';b.style.top='13.5%';b.style.width='18%';b.style.height='8%';}})();
+</script>
+
+<style>
+#tlMatchRatingsScreen .ex-art{background:linear-gradient(110deg,#071121e8,#0b1732e9),url('assets/manager-dashboard.png') center/100% 100% no-repeat}
+#tlMatchRatingsScreen .ex-heading{left:25%;width:50%;font-size:2.65cqw}
+#tlMatchRatingsScreen .ex-body{top:15%;height:69%;left:10%;width:80%;padding:1% 2%;overflow:auto}
+#tlMatchRatingsScreen .ex-footer{bottom:2%;height:10%}
+.tl-ratings-grid{display:grid;grid-template-columns:2.6fr .7fr .65fr .7fr;align-items:center;gap:1%;padding:.55% 1.5%;font-size:1.33cqw;background:#1d4c92;border-radius:8px;margin:.3% 0}
+.tl-ratings-grid:nth-child(odd){background:#12366e}
+.tl-ratings-head{color:#ffda67;font-weight:900;background:#0a2757!important}
+.tl-ratings-motm{border:2px solid #ffcf48;background:#275a9c!important}
+.tl-ratings-intro{color:#ffe17d;text-align:center;font-size:1.35cqw;margin-bottom:1%}
+#playerStatsScreen .ps-grid{grid-template-columns:2fr .42fr .45fr .5fr .5fr .55fr .6fr .65fr .55fr .6fr .65fr;font-size:.94cqw;gap:.25%}
+#playerStatsScreen .ps-grid span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+<section id="tlMatchRatingsScreen" class="screen"><div class="ex-art"><div class="ex-heading">PLAYER MATCH RATINGS</div><div class="ex-body" id="tlMatchRatingsBody"></div><div class="ex-footer"><button onclick="openDashboard()">DASHBOARD</button><button class="primary" onclick="tlRatingsLeagueResults()">ALL LEAGUE RESULTS</button></div></div></section>
+<script>
+/* Preserve original match results; display ratings on a separate, readable screen. */
+let tlLatestMatchRatingRows=[];
+let tlLatestMatchSeason='';
+let tlLatestMatchIsCup=false;
+function tlRatingsLeagueResults(){if(tlLatestMatchIsCup){showExtra('resultsScreen');return}if(typeof tlOpenWeekResults==='function'){tlOpenWeekResults();return}if(typeof openAllLeagueResults==='function'){openAllLeagueResults();return}openLeague()}
+const tlOriginalRatingsLine=tlRatingsLine;
+tlRatingsLine=function(ratings,scorers,participants){
+ const goals={};for(const n of (scorers||[]))goals[n]=(goals[n]||0)+1;
+ // A match-engine assist is not recorded in the original match data. Do not fabricate one.
+ tlLatestMatchRatingRows=(ratings||[]).map(r=>({...r,goals:goals[r.name]||0,assists:null}));
+ tlLatestMatchSeason=seasonLabel();tlLatestMatchIsCup=!!document.getElementById('resultsScreen').classList.contains('tlc-result');
+ const data=tlReadRecords();data.ratingSeasons||={};const season=data.ratingSeasons[tlLatestMatchSeason]||{};
+ for(const r of tlLatestMatchRatingRows){const key=String(r.id)+'|'+r.name;const item=season[key]||{name:r.name,total:0,apps:0,goals:0,motm:0};item.total+=r.rating;item.apps++;item.goals+=r.goals;season[key]=item}
+ const top=tlLatestMatchRatingRows.reduce((a,b)=>!a||b.rating>a.rating?b:a,null);
+ if(top){const key=String(top.id)+'|'+top.name;if(season[key])season[key].motm=(season[key].motm||0)+1}
+ data.ratingSeasons[tlLatestMatchSeason]=season;tlWriteRecords(data);
+ const footer=document.querySelector('#resultsScreen .ex-footer');if(footer){const b=footer.children[0];if(b){b.textContent='VIEW PLAYER RATINGS';b.onclick=tlOpenMatchRatings}}
+ // Keep full-time screen compact by removing the old inline ratings strip.
+ document.querySelectorAll('#resultsBody .tl-match-ratings').forEach(x=>x.remove());
+};
+function tlOpenMatchRatings(){
+ const host=document.getElementById('tlMatchRatingsBody');host.replaceChildren();
+ const intro=document.createElement('div');intro.className='tl-ratings-intro';intro.textContent=tlLatestMatchSeason+' · Ratings out of 10 · Assists not yet recorded by match engine';host.appendChild(intro);
+ const head=document.createElement('div');head.className='tl-ratings-grid tl-ratings-head';for(const t of ['PLAYER','RATING','GOALS','ASSISTS']){const x=document.createElement('span');x.textContent=t;head.appendChild(x)}host.appendChild(head);
+ const top=tlLatestMatchRatingRows.reduce((a,b)=>!a||b.rating>a.rating?b:a,null);
+ for(const p of [...tlLatestMatchRatingRows].sort((a,b)=>b.rating-a.rating)){
+  const row=document.createElement('div');row.className='tl-ratings-grid'+(top&&p.id===top.id?' tl-ratings-motm':'');
+  for(const value of [p.name+(top&&p.id===top.id?' ★ MOTM':''),p.rating.toFixed(1),p.goals,'—']){const x=document.createElement('span');x.textContent=value;row.appendChild(x)}host.appendChild(row)
+ }
+ tlShowNewScreen('tlMatchRatingsScreen');
+}
+/* New statistics are kept by season and isolated by the existing career save system. */
+const tlPreviousPlayerStats=openPlayerStats;
+openPlayerStats=function(){tlPreviousPlayerStats();
+ const head=document.querySelector('#playerStatsScreen .ps-head');if(!head)return;
+ head.querySelectorAll('.tl-added-stat').forEach(el=>el.remove());
+ for(const label of ['AVG','MOTM','AST']){const span=document.createElement('span');span.className='tl-added-stat';span.textContent=label;head.appendChild(span)}
+ const season=(tlReadRecords().ratingSeasons||{})[seasonLabel()]||{};
+ const rows=[...document.querySelectorAll('#playerStatsRows .ps-grid')];
+ const players=[...squadPlayers].sort((a,b)=>b.seasonGoals-a.seasonGoals||b.seasonApps-a.seasonApps||b.rating-a.rating);
+ rows.forEach((row,i)=>{const p=players[i];if(!p)return;const stat=season[String(p.id)+'|'+p.name];
+ for(const value of [stat?.apps?(stat.total/stat.apps).toFixed(1):'—',stat?.motm||0,'—']){const span=document.createElement('span');span.textContent=value;row.appendChild(span)}
+ });
+ const note=document.getElementById('playerStatsSummary');note.textContent+=' · AVG = average match rating · MOTM = player of match · AST = assists (not yet tracked)';
+};
 </script>
 
 </body>
