@@ -3639,5 +3639,73 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
  openFinances=function(){previousFinances();const body=document.getElementById('financeBody');if(body){const d=document.createElement('div');d.className='ex-metric';d.textContent='SCOUT WAGES INCLUDED IN TOTAL: '+pounds(scoutWage())+'/week';body.appendChild(d);}};
 })();
 </script>
+<style id="tlScoutDedicatedStyle">
+#tlScoutScreen{display:none;background:#06152a}
+#tlScoutScreen .tl-sc-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;container-type:inline-size;color:white;background:linear-gradient(110deg,#091a3bca,#07132bdf),url('assets/manager-dashboard.png') center/100% 100% no-repeat;font-family:Arial,sans-serif}
+#tlScoutScreen .tl-sc-title{position:absolute;top:3%;left:23%;width:54%;height:12%;border:3px solid #ffce42;border-radius:60px;background:linear-gradient(#2169c8,#071b4d);display:grid;place-items:center;font-size:3.2cqw;font-weight:900;text-shadow:2px 3px #00112b}
+#tlScoutScreen .tl-sc-content{position:absolute;top:18%;left:6%;width:88%;height:68%;display:grid;grid-template-columns:61% 38%;grid-template-rows:25% 73%;gap:2% 1%;font-size:1.38cqw}
+#tlScoutScreen .tl-sc-card{border:3px solid #ffce42;border-radius:16px;background:linear-gradient(#16488e,#061b47);padding:2%;min-height:0;overflow:hidden}
+#tlScoutScreen .tl-sc-card h2{font-size:1.7cqw;color:#ffdf79;margin:0 0 1.5%;text-align:center}
+#tlScoutScreen .tl-sc-summary{grid-column:1;grid-row:1}
+#tlScoutScreen .tl-sc-report{grid-column:1;grid-row:2}
+#tlScoutScreen .tl-sc-hiring{grid-column:2;grid-row:1 / span 2;overflow:auto}
+#tlScoutScreen .tl-sc-line{padding:1.1% 1.8%;margin:1% 0;border-radius:9px;background:#24539a;line-height:1.3}
+#tlScoutScreen .tl-sc-report .tl-sc-player{font-size:1.8cqw;line-height:1.5;padding:2%;background:#24539a;border-radius:12px;margin:2% 0}
+#tlScoutScreen .tl-sc-actions{display:flex;gap:2%;margin-top:2%}
+#tlScoutScreen .ex-button{border:2px solid #ffce42;border-radius:12px;background:linear-gradient(#2670d0,#07265f);color:white;font-weight:900;font-size:1.3cqw;cursor:pointer;padding:1.4% 3%}
+#tlScoutScreen .tl-scout-option{display:flex;align-items:center;justify-content:space-between;gap:2%;border-bottom:1px solid #ffffff33;padding:2% 0;font-size:1.16cqw}
+#tlScoutScreen .tl-scout-option .ex-button{flex-shrink:0;font-size:1.1cqw}
+#tlScoutScreen .tl-sc-footer{position:absolute;bottom:2%;left:6%;width:88%;height:9%;display:flex;gap:2%}
+#tlScoutScreen .tl-sc-footer button{flex:1;border:3px solid #ffce42;border-radius:16px;background:linear-gradient(#2670d0,#07265f);color:white;font-size:1.8cqw;font-weight:900;cursor:pointer}
+</style>
+<section id="tlScoutScreen" class="screen"><div class="tl-sc-art"><div class="tl-sc-title">SCOUTING CENTRE</div><div class="tl-sc-content"><div class="tl-sc-card tl-sc-summary"><h2>YOUR SCOUT &amp; WAGE BUDGET</h2><div id="tlScSummary"></div></div><div class="tl-sc-card tl-sc-report"><h2>LATEST PLAYER REPORT</h2><div id="tlScReport"></div></div><div class="tl-sc-card tl-sc-hiring"><h2>HIRE OR REPLACE SCOUT</h2><div id="tlScHiring"></div></div></div><div class="tl-sc-footer"><button type="button" onclick="openTransfers()">BACK TO TRANSFERS</button><button type="button" onclick="openDashboard()">MISSION CONTROL</button></div></div></section>
+<script id="tlScoutingDedicatedScreen">
+(function(){
+ 'use strict';
+ const oldShowFootball=showFootballScreen;
+ showFootballScreen=function(id){const sc=document.getElementById('tlScoutScreen');if(sc)sc.style.display='none';return oldShowFootball(id);};
+ const oldOpenDashboard=openDashboard;
+ openDashboard=function(){document.getElementById('tlScoutScreen').style.display='none';return oldOpenDashboard();};
+ const oldOpenTransfers=openTransfers;
+ openTransfers=function(){oldOpenTransfers();const tab=document.getElementById('tlScoutTab');if(tab){tab.onclick=openScouting;tab.textContent='SCOUTING CENTRE';}};
+ window.openScouting=function(){
+  oldOpenTransfers();
+  document.getElementById('transfersScreen').style.display='none';
+  document.getElementById('tlScoutScreen').style.display='flex';
+  transferTab='scouting';renderTransfers();
+ };
+ const oldRender=renderTransfers;
+ renderTransfers=function(){
+  if(transferTab!=='scouting')return oldRender();
+  oldRender();
+  const panel=document.getElementById('tlScoutPanel');if(!panel)return;
+  const summary=document.getElementById('tlScSummary'),report=document.getElementById('tlScReport'),hiring=document.getElementById('tlScHiring');
+  summary.replaceChildren();report.replaceChildren();hiring.replaceChildren();
+  let actions=null;
+  Array.from(panel.children).forEach(node=>{
+   const t=node.textContent||'';
+   if(node.classList.contains('tl-scout-option')){hiring.appendChild(node);return;}
+   if(t.startsWith('HIRE OR REPLACE'))return;
+   if(t.startsWith('SHARED WEEKLY WAGES')||t.startsWith('EMPLOYED:')||t.startsWith('NO SCOUT EMPLOYED')||t.startsWith('NEXT REPORT:')||t.startsWith('NEW PLAYER REPORT AVAILABLE')){
+    node.className='tl-sc-line';summary.appendChild(node);return;
+   }
+   if(t.startsWith('DISCOVERED PLAYER:')){
+    node.className='tl-sc-player';
+    const p=t.replace('DISCOVERED PLAYER: ','').split(' · ');
+    node.replaceChildren();
+    p.forEach((part,i)=>{const div=document.createElement('div');div.textContent=part;if(i===0){const b=document.createElement('strong');b.textContent=part;div.replaceChildren(b);}node.appendChild(div);});
+    report.appendChild(node);return;
+   }
+   if(node.tagName==='BUTTON'){
+    if(t==='SIGN PLAYER'||t==='DISMISS REPORT'){if(!actions){actions=document.createElement('div');actions.className='tl-sc-actions';report.appendChild(actions);}actions.appendChild(node);}
+    else hiring.appendChild(node);
+   }else report.appendChild(node);
+  });
+  if(!report.children.length){const p=document.createElement('div');p.className='tl-sc-line';p.textContent='No player report available yet. Your scout discovers a new player every four completed league matchweeks.';report.appendChild(p);}
+  const active=document.getElementById('tlScoutScreen').style.display==='flex';
+  if(active)document.getElementById('transfersScreen').style.display='none';
+ };
+})();
+</script>
 </body>
 </html>
