@@ -3183,24 +3183,33 @@ openPlayerStats=function(){tlPreviousPlayerStats();
  }
  window.tlOpenHistory=function(){renderHistory();tlShowNewScreen('tlHistoryV2')};
  function renderPlayers(){
-  const options=[['season','THIS SEASON'],['career','CAREER TOTALS'],['goals','SORT: GOALS'],['assists','SORT: ASSISTS'],['rating','SORT: RATING']];
+  const options=[['season','THIS SEASON'],['career','CAREER TOTALS'],['goals','GOALS ↓'],['assists','ASSISTS ↓'],['rating','AVG RATING ↓']];
   const tabHost=$('tlv2PlayerTabs');tabHost.replaceChildren();
-  for(const [id,label] of options){const b=node('button',id===(id==='season'||id==='career'?playerTab:playerSort)?'active':'',label);b.type='button';b.onclick=()=>{if(id==='season'||id==='career')playerTab=id;else playerSort=id;renderPlayers()};tabHost.appendChild(b)}
+  for(const [id,label] of options){const button=node('button',(id==='season'||id==='career'?playerTab===id:playerSort===id)?'active':'',label);button.type='button';button.onclick=()=>{if(id==='season'||id==='career')playerTab=id;else playerSort=id;renderPlayers()};tabHost.appendChild(button)}
   const host=$('tlv2PlayerContent');host.replaceChildren();host.scrollTop=0;
-  host.appendChild(node('div','tlv2-hint',seasonLabel()+' · '+seasonDivision()+' · Sorted by '+playerSort+' · Assists and ratings tracked since the feature was introduced'));
   const ratingSeasons=tlReadRecords().ratingSeasons||{};
-  const stats=ratingSeasons[seasonLabel()]||{};
+  const currentRatings=ratingSeasons[seasonLabel()]||{};
   const players=[...squadPlayers].map(p=>{
    const key=String(p.id)+'|'+p.name;
-   const r=playerTab==='season'?(stats[key]||{}):Object.values(ratingSeasons).reduce((total,year)=>{
-    const entry=year&&year[key];if(entry){total.apps+=(entry.apps||0);total.total+=(entry.total||0);total.assists+=(entry.assists||0);total.motm+=(entry.motm||0)}return total;
+   const r=playerTab==='season'?(currentRatings[key]||{}):Object.values(ratingSeasons).reduce((total,year)=>{
+    const entry=year&&year[key];if(entry){total.apps+=entry.apps||0;total.total+=entry.total||0;total.assists+=entry.assists||0;total.motm+=entry.motm||0}return total;
    },{apps:0,total:0,assists:0,motm:0});
-   return {p,r,apps:playerTab==='season'?(p.seasonApps||0):(p.careerApps||0),goals:playerTab==='season'?(p.seasonGoals||0):(p.careerGoals||0),assists:r.assists||0,avg:r.apps?r.total/r.apps:0,motm:r.motm||0};
+   return {p,apps:playerTab==='season'?(p.seasonApps||0):(p.careerApps||0),goals:playerTab==='season'?(p.seasonGoals||0):(p.careerGoals||0),assists:r.assists||0,avg:r.apps?r.total/r.apps:null,motm:r.motm||0};
   });
-  players.sort((a,b)=>playerSort==='assists'?b.assists-a.assists||b.goals-a.goals:playerSort==='rating'?b.avg-a.avg||b.goals-a.goals:b.goals-a.goals||b.apps-a.apps);
-  const head=node('div','tlv2-stathead');for(const x of ['PLAYER','POS','AGE','RTG','APP','GOALS','AST*','AVG*'])head.appendChild(node('span','',x));host.appendChild(head);
-  for(const x of players){const row=node('div','tlv2-statrow');for(const value of [x.p.name,x.p.pos,x.p.age,x.p.rating,x.apps,x.goals,x.assists,x.avg?x.avg.toFixed(1):'—'])row.appendChild(node('span','',value));host.appendChild(row)}
-  host.appendChild(node('div','tlv2-hint','* Assists and average ratings cover matches recorded since these features were introduced; older matches cannot be reconstructed.'));
+  players.sort((a,b)=>playerSort==='assists'?b.assists-a.assists||b.goals-a.goals:playerSort==='rating'?(b.avg??-1)-(a.avg??-1)||b.goals-a.goals:b.goals-a.goals||b.apps-a.apps);
+  const intro=node('div','tlv2-stats-intro');
+  intro.append(node('strong','',playerTab==='season'?seasonLabel()+' · '+seasonDivision():'ALL RECORDED SEASONS'),node('span','','APP = starts · AST = assists · AVG = match rating /10 · MOTM = Man of the Match'));
+  host.appendChild(intro);
+  const summary=node('div','tlv2-stats-summary');
+  for(const [label,value] of [['PLAYERS',players.length],['GOALS',players.reduce((n,x)=>n+x.goals,0)],['ASSISTS*',players.reduce((n,x)=>n+x.assists,0)],['MOTM*',players.reduce((n,x)=>n+x.motm,0)]]){
+   const tile=node('div','tlv2-stats-tile');tile.append(node('b','',label),node('strong','',value));summary.appendChild(tile);
+  }
+  host.appendChild(summary);
+  const table=node('div','tlv2-stats-table');
+  const head=node('div','tlv2-stathead');for(const value of ['PLAYER','POS','AGE','OVR','APP','GOALS','AST*','AVG*','MOTM*'])head.appendChild(node('span','',value));table.appendChild(head);
+  for(const x of players){const row=node('div','tlv2-statrow');for(const value of [x.p.name,x.p.pos,x.p.age,x.p.rating,x.apps,x.goals,x.assists,x.avg===null?'—':x.avg.toFixed(1),x.motm])row.appendChild(node('span','',value));table.appendChild(row)}
+  host.appendChild(table);
+  host.appendChild(node('div','tlv2-stats-footnote','* Assists, match ratings and Man of the Match awards have only been recorded since those features were introduced. Older matches cannot be reconstructed.'));
  }
  window.openPlayerStats=function(){squadLoad();renderPlayers();tlShowNewScreen('tlPlayerV2')};
  const oldDashboard=openDashboard;
@@ -3249,5 +3258,31 @@ openPlayerStats=function(){tlPreviousPlayerStats();
 #tlPlayerV2 .tlv2-stathead,#tlPlayerV2 .tlv2-statrow{grid-template-columns:2.5fr .48fr .5fr .55fr .65fr .7fr .65fr .7fr;font-size:1.17cqw}
 #tlPlayerV2 .tlv2-tabs button.active{box-shadow:inset 0 0 0 1px #fff1ac}
 </style>
+
+<style>
+/* Player Statistics redesign: one legible nine-column table and fixed controls. */
+#tlPlayerV2 .tlv2-panel{left:7%;width:86%;top:18%;height:65%;padding:1.1%;gap:1.2%}
+#tlPlayerV2 .tlv2-footer{left:7%;width:86%}
+#tlPlayerV2 .tlv2-tabs{height:13%;gap:.8%}
+#tlPlayerV2 .tlv2-tabs button{font-size:1.12cqw;white-space:nowrap}
+#tlPlayerV2 .tlv2-scroll{padding:0 0 3%;overflow-y:auto!important}
+.tlv2-stats-intro{display:flex;justify-content:space-between;gap:1%;align-items:center;color:#ffe08a;font-size:1.05cqw;margin:0 0 1.1%}
+.tlv2-stats-intro strong{font-size:1.35cqw}
+.tlv2-stats-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:1%;margin-bottom:1.2%}
+.tlv2-stats-tile{background:#17427e;border:1px solid #c69c3a;border-radius:9px;text-align:center;padding:.7% 1%}
+.tlv2-stats-tile b{display:block;color:#ffe18b;font-size:.92cqw}
+.tlv2-stats-tile strong{display:block;color:#fff;font-size:1.6cqw}
+#tlPlayerV2 .tlv2-stats-table{width:100%}
+#tlPlayerV2 .tlv2-stathead,#tlPlayerV2 .tlv2-statrow{grid-template-columns:2.55fr .43fr .43fr .48fr .52fr .6fr .5fr .55fr .6fr;gap:.3%;font-size:1.12cqw;padding:.85% 1%;text-align:center}
+#tlPlayerV2 .tlv2-stathead span:first-child,#tlPlayerV2 .tlv2-statrow span:first-child{text-align:left}
+#tlPlayerV2 .tlv2-stathead{position:sticky;top:0;z-index:3}
+#tlPlayerV2 .tlv2-statrow{margin-top:.35%;min-height:2.6cqw}
+.tlv2-stats-footnote{font-size:1.05cqw;color:#ffe08a;text-align:center;margin:1.5% 0}
+</style>
+<script>
+/* The squad button was assigned the original function before the new page existed.
+   Rebind it directly; leave match simulation, trophy pages and save data intact. */
+if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerStats();
+</script>
 </body>
 </html>
