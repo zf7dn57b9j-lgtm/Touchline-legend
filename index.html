@@ -3183,11 +3183,20 @@ openPlayerStats=function(){tlPreviousPlayerStats();
  }
  window.tlOpenHistory=function(){renderHistory();tlShowNewScreen('tlHistoryV2')};
  function renderPlayers(){
-  tabs($('tlv2PlayerTabs'),[['season','THIS SEASON'],['career','CAREER TOTALS'],['goals','SORT: GOALS'],['assists','SORT: ASSISTS'],['rating','SORT: RATING']],playerTab,(t)=>{if(['season','career'].includes(t))playerTab=t;else playerSort=t;renderPlayers()});
+  const options=[['season','THIS SEASON'],['career','CAREER TOTALS'],['goals','SORT: GOALS'],['assists','SORT: ASSISTS'],['rating','SORT: RATING']];
+  const tabHost=$('tlv2PlayerTabs');tabHost.replaceChildren();
+  for(const [id,label] of options){const b=node('button',id===(id==='season'||id==='career'?playerTab:playerSort)?'active':'',label);b.type='button';b.onclick=()=>{if(id==='season'||id==='career')playerTab=id;else playerSort=id;renderPlayers()};tabHost.appendChild(b)}
   const host=$('tlv2PlayerContent');host.replaceChildren();host.scrollTop=0;
-  host.appendChild(node('div','tlv2-hint',seasonLabel()+' · '+seasonDivision()+' · Sorted by '+playerSort+' · Assists and ratings recorded from the recent match update'));
-  const stats=(tlReadRecords().ratingSeasons||{})[seasonLabel()]||{};
-  const players=[...squadPlayers].map(p=>{const r=stats[String(p.id)+'|'+p.name]||{};return {p,r,apps:playerTab==='season'?(p.seasonApps||0):(p.careerApps||0),goals:playerTab==='season'?(p.seasonGoals||0):(p.careerGoals||0),assists:r.assists||0,avg:r.apps?r.total/r.apps:0,motm:r.motm||0}});
+  host.appendChild(node('div','tlv2-hint',seasonLabel()+' · '+seasonDivision()+' · Sorted by '+playerSort+' · Assists and ratings tracked since the feature was introduced'));
+  const ratingSeasons=tlReadRecords().ratingSeasons||{};
+  const stats=ratingSeasons[seasonLabel()]||{};
+  const players=[...squadPlayers].map(p=>{
+   const key=String(p.id)+'|'+p.name;
+   const r=playerTab==='season'?(stats[key]||{}):Object.values(ratingSeasons).reduce((total,year)=>{
+    const entry=year&&year[key];if(entry){total.apps+=(entry.apps||0);total.total+=(entry.total||0);total.assists+=(entry.assists||0);total.motm+=(entry.motm||0)}return total;
+   },{apps:0,total:0,assists:0,motm:0});
+   return {p,r,apps:playerTab==='season'?(p.seasonApps||0):(p.careerApps||0),goals:playerTab==='season'?(p.seasonGoals||0):(p.careerGoals||0),assists:r.assists||0,avg:r.apps?r.total/r.apps:0,motm:r.motm||0};
+  });
   players.sort((a,b)=>playerSort==='assists'?b.assists-a.assists||b.goals-a.goals:playerSort==='rating'?b.avg-a.avg||b.goals-a.goals:b.goals-a.goals||b.apps-a.apps);
   const head=node('div','tlv2-stathead');for(const x of ['PLAYER','POS','AGE','RTG','APP','GOALS','AST*','AVG*'])head.appendChild(node('span','',x));host.appendChild(head);
   for(const x of players){const row=node('div','tlv2-statrow');for(const value of [x.p.name,x.p.pos,x.p.age,x.p.rating,x.apps,x.goals,x.assists,x.avg?x.avg.toFixed(1):'—'])row.appendChild(node('span','',value));host.appendChild(row)}
@@ -3229,5 +3238,16 @@ openPlayerStats=function(){tlPreviousPlayerStats();
 })();
 </script>
 
+
+<style>
+/* Trophy Cabinet readability update: opaque cards, larger trophy and season. */
+#tlTrophyRoom .tl-trophy-art{background:linear-gradient(115deg,#07162bc9,#07142ad6),url('assets/manager-dashboard.png') center/100% 100% no-repeat}
+#tlTrophyRoom .tl-trophy-grid{left:13%;width:74%;top:17%;height:66%;gap:2.2%;grid-auto-rows:minmax(30%,auto);padding:1%}
+#tlTrophyRoom .tl-trophy{background:linear-gradient(160deg,#184583,#091e48);border:3px solid #ffda68;border-radius:16px;box-shadow:0 3px 8px #0009;gap:5%;font-size:1.2cqw;line-height:1.25;padding:4%}
+#tlTrophyRoom .tl-trophy .cup{font-size:4.6cqw;line-height:1.1}
+#tlTrophyRoom .tl-trophy small{font-size:1.1cqw;color:#ffe59b;font-weight:900}
+#tlPlayerV2 .tlv2-stathead,#tlPlayerV2 .tlv2-statrow{grid-template-columns:2.5fr .48fr .5fr .55fr .65fr .7fr .65fr .7fr;font-size:1.17cqw}
+#tlPlayerV2 .tlv2-tabs button.active{box-shadow:inset 0 0 0 1px #fff1ac}
+</style>
 </body>
 </html>
