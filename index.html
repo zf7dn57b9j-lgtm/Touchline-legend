@@ -731,7 +731,7 @@ function loadMatches(){
 }
 function saveMatches(){localStorage.setItem(matchStorageKey(),JSON.stringify(leagueMatches))}
 function showFootballScreen(id){
- for(const name of ['welcome','menu','career','clubs','dashboard','squadScreen','tacticsScreen','fixturesScreen','leagueScreen']){
+ for(const name of ['welcome','menu','career','clubs','dashboard','squadScreen','tacticsScreen','fixturesScreen','leagueScreen','tlQuickMatch','tlMatchSquad']){
   const el=document.getElementById(name);if(el)el.style.display=name===id?'flex':'none';
  }
 }
@@ -3299,7 +3299,7 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
 .tlq-side label{display:block;color:#ffe17d;font-weight:900;margin:1.3% 0}
 .tlq-side select{width:100%;background:#1c559e;color:white;border:1px solid #ffd14d;border-radius:7px;padding:2%;font-size:1.18cqw}
 .tlq-side button{display:block;width:100%;margin:4% 0;padding:3%;border:2px solid #ffd14d;border-radius:10px;background:linear-gradient(#256cc4,#08275e);color:white;font-weight:900;font-size:1.15cqw}
-.tlq-side button:disabled{opacity:.5}.tlq-note{color:#ffe17d;min-height:2.5em}
+.tlq-side button:disabled{opacity:.5}.tlq-subhint{font-size:1.22cqw;line-height:1.5;margin:4% 0;color:#e5efff}.tlq-note{color:#ffe17d;min-height:2.5em}
 .tlq-footer{position:absolute;bottom:3%;left:8%;width:84%;height:10%;display:flex;gap:2%}
 .tlq-footer button{flex:1;border:3px solid #ffd14d;border-radius:15px;background:linear-gradient(#236bc5,#08285e);color:white;font-weight:900;font-size:1.55cqw}.tlq-footer button:last-child{background:linear-gradient(#17a53c,#075522)}
 #nextMatchScreen .ex-footer{gap:1%}#nextMatchScreen .ex-footer button{font-size:1.4cqw}
@@ -3311,27 +3311,84 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
 <div class="tlq-log" id="tlqLog" aria-live="polite"></div>
 <div class="tlq-side"><label>MENTALITY</label><select id="tlqMentality" onchange="tlqSetMentality(this.value)"><option>Balanced</option><option>Attacking</option><option>Defensive</option></select>
 <label>FORMATION</label><select id="tlqFormation" onchange="tlqSetFormation(this.value)"><option>4-4-2</option><option>4-3-3</option><option>3-5-2</option></select>
-<label>PLAYER OFF</label><select id="tlqOff"></select><label>SUBSTITUTE ON</label><select id="tlqOn"></select>
+<div class="tlq-subhint">Review the starting XI, substitutes, positions, overall ratings and live match ratings before making a change.</div><div style="display:none"><select id="tlqOff"></select><select id="tlqOn"></select></div>
 <button onclick="tlqSubstitute()">MAKE SUBSTITUTION</button><div class="tlq-note" id="tlqNote"></div></div>
 <div class="tlq-footer"><button id="tlqPause" onclick="tlqToggle()">PAUSE</button><button onclick="tlqSkip()">SKIP TO FULL TIME</button><button id="tlqContinue" onclick="tlqContinue()">CONTINUE MATCH</button></div>
+</div></section>
+<style>
+/* Matchday command centre: a self-contained screen, scaled to iPad landscape. */
+#tlMatchSquad{display:none;background:#06152a}
+.tlms-art{position:relative;width:min(100vw,177.78dvh);aspect-ratio:16/9;container-type:inline-size;color:white;overflow:hidden;background:linear-gradient(110deg,#06152aee,#0b2553ed),url('assets/manager-dashboard.png') center/100% 100% no-repeat}
+.tlms-heading{position:absolute;left:25%;top:2%;width:50%;height:10%;border:3px solid #ffd14d;border-radius:35px;background:linear-gradient(#226bc8,#071d50);display:grid;place-items:center;font-size:2.8cqw;font-weight:900}
+.tlms-score{position:absolute;left:8%;top:13%;width:84%;height:5%;text-align:center;font-size:1.55cqw;font-weight:900;color:#ffe17d}
+.tlms-panel{position:absolute;top:20%;height:60%;border:2px solid #ffd14d;border-radius:13px;background:linear-gradient(#16488e,#071b44);padding:.8%;overflow:hidden}
+.tlms-left{left:2%;width:45%}.tlms-right{left:48%;width:30%}.tlms-tactics{left:79%;width:19%}
+.tlms-label{height:8%;text-align:center;color:#ffe17d;font-size:1.3cqw;font-weight:900}
+.tlms-cols,.tlms-player{display:grid;grid-template-columns:44% 13% 13% 16% 14%;align-items:center;text-align:center}
+.tlms-cols{height:7%;color:#ffe17d;font-size:.94cqw;font-weight:900}
+.tlms-player{width:100%;height:7.65%;border:0;border-bottom:1px solid #ffffff35;background:#22569c;color:white;font-size:1.02cqw;cursor:pointer;padding:0 1%}
+.tlms-player:nth-child(even){background:#163d78}.tlms-player.selected{background:#e8bc43;color:#06152a;font-weight:900;outline:2px solid #fff}
+.tlms-player span:first-child{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlms-right .tlms-player{height:11.5%;font-size:.98cqw}.tlms-player:disabled{opacity:.4;cursor:not-allowed}
+.tlms-tactics label{display:block;color:#ffe17d;font-size:1.1cqw;font-weight:900;margin:6% 0 2%}
+.tlms-tactics select{width:100%;font-size:1.15cqw;background:#205da9;color:#fff;border:2px solid #ffd14d;border-radius:8px;padding:5% 2%}
+.tlms-tactics .tlms-tip{font-size:1.04cqw;line-height:1.4;margin-top:8%;color:#d9eaff}
+.tlms-info{position:absolute;top:81%;left:3%;width:94%;text-align:center;color:#ffe17d;font-size:1.15cqw;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlms-footer{position:absolute;bottom:2%;left:3%;width:94%;height:11%;display:flex;gap:2%}
+.tlms-footer button{flex:1;border:3px solid #ffd14d;border-radius:15px;background:linear-gradient(#236bc5,#08285e);color:white;font-size:1.45cqw;font-weight:900;cursor:pointer}.tlms-footer button:nth-child(2){background:linear-gradient(#d9a22c,#835309)}.tlms-footer button:last-child{background:linear-gradient(#17a53c,#075522)}
+</style>
+<section id="tlMatchSquad" class="screen"><div class="tlms-art">
+<div class="tlms-heading">MATCHDAY COMMAND CENTRE</div><div class="tlms-score" id="tlmsScore"></div>
+<div class="tlms-panel tlms-left"><div class="tlms-label">ON THE PITCH · STARTING XI</div><div class="tlms-cols"><span>PLAYER</span><span>POS</span><span>OVR</span><span>GAME</span><span>STATUS</span></div><div id="tlmsXI"></div></div>
+<div class="tlms-panel tlms-right"><div class="tlms-label">SUBSTITUTES</div><div class="tlms-cols"><span>PLAYER</span><span>POS</span><span>OVR</span><span>GAME</span><span>STATUS</span></div><div id="tlmsBench"></div></div>
+<div class="tlms-panel tlms-tactics"><div class="tlms-label">TACTICS</div><label for="tlmsFormation">FORMATION</label><select id="tlmsFormation" onchange="tlqSetFormation(this.value);tlmsSync()"><option>4-4-2</option><option>4-3-3</option><option>3-5-2</option></select><label for="tlmsMentality">MENTALITY</label><select id="tlmsMentality" onchange="tlqSetMentality(this.value);tlmsSync()"><option>Balanced</option><option>Attacking</option><option>Defensive</option></select><div class="tlms-tip">Select one player on the pitch and one on the bench. Yellow highlights show your choices.<p>GAME is the live performance rating out of 10. OVR is the player's overall ability.</p></div></div>
+<div class="tlms-info" id="tlmsInfo" aria-live="polite"></div><div class="tlms-footer"><button onclick="tlqReturnSquad()">BACK TO COMMENTARY</button><button onclick="tlqConfirmSub()">CONFIRM SUBSTITUTION</button><button onclick="tlqReturnSquad()">RETURN TO MATCH</button></div>
 </div></section>
 <script>
 /* Commentary runs without writing league results until full-time. Existing
    match settlement is called once, preserving finances, cups and career records. */
 (function(){
  const $=id=>document.getElementById(id);
- let match=null,timer=null;
+ let match=null,timer=null,selectedOff=null,selectedOn=null;
  const originalPlay=playInstantMatch;
  const originalOpenNext=openNextMatch;
  const baseSim=tlSimulateFixture;
  const note=t=>{$('tlqNote').textContent=t};
  const log=(t,goal=false)=>{const row=document.createElement('div');row.className='tlq-line'+(goal?' goal':'');row.textContent=t;$('tlqLog').appendChild(row);$('tlqLog').scrollTop=$('tlqLog').scrollHeight};
  function stop(){if(timer!==null){clearInterval(timer);timer=null}}
+ function performance(p){return match&&match.ratings[String(p.id)]!==undefined?match.ratings[String(p.id)].toFixed(1):'—'}
+ function adjustRating(p,delta){if(!p||!match)return;const k=String(p.id);match.ratings[k]=Math.max(4,Math.min(10,Math.round(((match.ratings[k]??6.5)+delta)*10)/10))}
+ function matchdayRender(){
+  if(!match)return;
+  $('tlmsScore').textContent=match.home+' '+match.h+' – '+match.a+' '+match.away+' · '+match.minute+"' · "+match.subs+'/5 subs used';$('tlmsFormation').value=formations[squadFormationIndex];$('tlmsMentality').value=tacticMentality;
+  const make=(p,where)=>{const b=document.createElement('button');b.type='button';b.className='tlms-player'+((where==='xi'?selectedOff:selectedOn)===String(p.id)?' selected':'');
+   const vals=[p.name,p.pos,p.rating,performance(p),where==='xi'?'ON':'BENCH'];for(const v of vals){const x=document.createElement('span');x.textContent=v;b.appendChild(x)}
+   if(where==='bench'&&!tlAvailable(p))b.disabled=true;
+   b.onclick=()=>{if(where==='xi')selectedOff=String(p.id);else selectedOn=String(p.id);matchdayRender()};return b};
+  $('tlmsXI').replaceChildren(...match.lineup.map(p=>make(p,'xi')));
+  $('tlmsBench').replaceChildren(...match.bench.map(p=>make(p,'bench')));
+  const off=match.lineup.find(p=>String(p.id)===selectedOff),on=match.bench.find(p=>String(p.id)===selectedOn);
+  $('tlmsInfo').textContent=match.subs>=5?'All five substitutions used.':off&&on?'CHANGE: '+off.name+' → '+on.name:off?'OFF: '+off.name+' — now choose a substitute':on?'ON: '+on.name+' — now choose a player to replace':'Tap a player on the pitch, then an available substitute. Ratings update during play.';
+ }
+ window.tlmsSync=function(){if(match)matchdayRender()};
+ window.tlqOpenSquad=function(){if(!match)return;stop();match.paused=true;selectedOff=null;selectedOn=null;$('tlQuickMatch').style.display='none';$('tlMatchSquad').style.display='flex';matchdayRender()};
+ window.tlqReturnSquad=function(){if(!match)return;$('tlMatchSquad').style.display='none';$('tlQuickMatch').style.display='flex';note('Match paused — resume when ready.');refresh()};
+ window.tlqConfirmSub=function(){if(!match)return;const off=match.lineup.find(p=>String(p.id)===selectedOff),on=match.bench.find(p=>String(p.id)===selectedOn);
+  if(!off||!on){$('tlmsInfo').textContent='Select one player from each column.';return}
+  if(match.subs>=5){$('tlmsInfo').textContent='Five substitutions already used.';return}
+  if((off.pos==='GK')!==(on.pos==='GK')){$('tlmsInfo').textContent='Goalkeepers must be replaced by goalkeepers.';return}
+  if(!tlAvailable(on)){$('tlmsInfo').textContent='That substitute is unavailable.';return}
+  match.lineup=match.lineup.map(p=>String(p.id)===selectedOff?on:p);match.bench=match.bench.filter(p=>String(p.id)!==selectedOn);
+  match.ratings[String(on.id)]=6.5;match.used.push(on.id);match.subs++;
+  log(match.minute+"' SUBSTITUTION: "+on.name+' replaces '+off.name+'.');selectedOff=null;selectedOn=null;
+  window.tlqReturnSquad();note(match.subs+'/5 substitutions used. Match paused.');refresh();
+ };
  function refresh(){
   if(!match)return;
   $('tlqClock').textContent=match.minute+"' · "+(match.minute===45?'HALF-TIME':match.paused?'PAUSED':'LIVE');
   $('tlqScore').textContent=match.h+' – '+match.a;
-  $('tlqPause').textContent=match.paused?'RESUME':'PAUSE';
+  $('tlqPause').textContent=match.paused?'MATCH PAUSED':'PAUSE';
+  $('tlqPause').disabled=match.paused;
   $('tlqContinue').textContent=match.minute===45?'START SECOND HALF':match.paused?'RESUME MATCH':'PLAYING';
   $('tlqContinue').disabled=!match.paused;
   $('tlqMentality').value=tacticMentality;
@@ -3346,9 +3403,12 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
  function tick(){
   if(!match||match.paused)return;
   match.minute=Math.min(90,match.minute+5);
+  // Live match ratings are event-based estimates, not a second match simulation.
+  for(const p of match.lineup)adjustRating(p,(Math.random()-.48)*.22);
   for(const ev of match.events.filter(e=>e.minute>match.minute-5&&e.minute<=match.minute)){
    if(ev.home)match.h++;else match.a++;
    log(ev.minute+"' GOAL! "+(ev.home?match.home:match.away)+' score!',true);
+   if(ev.home===(match.home===careerClub())){const scorer=match.lineup.filter(p=>p.pos==='ST'||p.pos==='AMC'||p.pos==='MC');const pick=scorer[Math.floor(Math.random()*scorer.length)]||match.lineup[9];adjustRating(pick,1.0);ev.scorer=pick?.name}
   }
   if(match.minute===45){match.paused=true;stop();log("45' HALF-TIME — make substitutions or tactical changes, then start the second half.");note('Half-time: match automatically paused.');}
   else if(match.minute>=90){stop();finish();return}
@@ -3368,10 +3428,13 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   loadMatches();const f=leagueMatches[w].find(x=>teams[x.home]===careerClub()||teams[x.away]===careerClub());if(!f)return;
   const predicted=baseSim(f,w);
   const events=[];
-  for(let i=0;i<predicted[0];i++)events.push({home:true,minute:5+Math.floor(Math.random()*17)*5});
-  for(let i=0;i<predicted[1];i++)events.push({home:false,minute:5+Math.floor(Math.random()*17)*5});
+  // Spread goal events across the match rather than reporting several at one minute.
+  const totalGoals=predicted[0]+predicted[1];
+  const goalSlots=Array.from({length:Math.max(18,totalGoals)},(_,i)=>5+Math.floor(i*85/Math.max(18,totalGoals))).sort(()=>Math.random()-.5).slice(0,totalGoals).sort((a,b)=>a-b);
+  const goalSides=[...Array(predicted[0]).fill(true),...Array(predicted[1]).fill(false)].sort(()=>Math.random()-.5);
+  goalSlots.forEach((minute,i)=>events.push({home:goalSides[i],minute}));
   events.sort((a,b)=>a.minute-b.minute);
-  match={week:w,home:teams[f.home],away:teams[f.away],homeId:f.home,awayId:f.away,score:predicted,events,minute:0,h:0,a:0,paused:false,subs:0,lineup:squadPlayers.slice(0,11).map(p=>({...p})),bench:squadPlayers.slice(11,18).map(p=>({...p})),original:squadPlayers.map(p=>({...p})),used:[]};
+  match={week:w,home:teams[f.home],away:teams[f.away],homeId:f.home,awayId:f.away,score:predicted,events,minute:0,h:0,a:0,paused:false,subs:0,lineup:squadPlayers.slice(0,11).map(p=>({...p})),bench:squadPlayers.slice(11,18).map(p=>({...p})),original:squadPlayers.map(p=>({...p})),used:[],ratings:Object.fromEntries(squadPlayers.slice(0,11).map(p=>[String(p.id),6.5]))};
   $('tlqHome').textContent=match.home;$('tlqAway').textContent=match.away;$('tlqLog').replaceChildren();note('Up to 5 substitutions. Pause at any time.');
   log("0' Kick-off! "+match.home+' versus '+match.away);
   for(const el of document.querySelectorAll('.screen'))el.style.display='none';$('tlQuickMatch').style.display='flex';refresh();startTimer();
@@ -3388,6 +3451,7 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   const sim=tlSimulateFixture;
   tlSimulateFixture=function(f,w){if(w===m.week&&f.home===m.homeId&&f.away===m.awayId)return [m.h,m.a];return sim(f,w)};
   try{originalPlay()}finally{tlSimulateFixture=sim}
+  const box=$('resultsBody');if(box){const rating=document.createElement('div');rating.style.cssText='font-size:1.2cqw;color:#ffe17d;margin-top:1%';rating.textContent='MATCH RATINGS: '+m.lineup.map(p=>p.name+' '+(m.ratings[String(p.id)]??6.5).toFixed(1)).join(' · ');box.appendChild(rating)}
   // Restore the original squad order, retaining every updated player statistic,
   // injury, suspension, contract and other field from the settled match.
   squadLoad();const updated=new Map(squadPlayers.map(p=>[String(p.id),p]));
@@ -3400,26 +3464,18 @@ if(typeof statsButton!=='undefined')statsButton.onclick=()=>window.openPlayerSta
   if(currentWeek()===m.week){alert('Match could not be completed. Your original squad was restored.');openDashboard()}
  }
  window.tlqStart=begin;
- window.tlqToggle=function(){if(!match)return;if(match.minute===45){note('Select START SECOND HALF to continue.');return}match.paused=!match.paused;if(match.paused){stop();note('Paused — you can change tactics or make substitutions.')}else{note('Match resumed.');startTimer()}refresh()};
- window.tlqContinue=function(){if(!match)return;match.paused=false;if(match.minute===45)log("46' Second half underway.");note('Match resumed.');refresh();startTimer()};
+ window.tlqToggle=function(){if(!match||match.paused)return;if(match.minute===45){note('Select START SECOND HALF to continue.');return}match.paused=!match.paused;if(match.paused){stop();note('Paused — you can change tactics or make substitutions.')}else{note('Match resumed.');startTimer()}refresh()};
+ window.tlqContinue=function(){if(!match)return;match.paused=false;if(match.minute===45)log("45' Second half underway.");note('Match resumed.');refresh();startTimer()};
  window.tlqSkip=function(){if(!match)return;if(!confirm('Simulate the remaining minutes and go to full time?'))return;stop();match.paused=false;while(match&&match.minute<90){tick();if(match&&match.minute===45)match.paused=false}};
  window.tlqSetMentality=function(v){if(!match)return;tacticMentality=v;localStorage.setItem(tacticKey(),JSON.stringify({mentality:tacticMentality,instructions:tacticFlags}));log(match.minute+"' Tactical change: "+v+' mentality.');note('Tactical change saved.');refresh()};
  window.tlqSetFormation=function(v){if(!match)return;const i=formations.indexOf(v);if(i<0)return;squadFormationIndex=i;log(match.minute+"' Formation changed to "+v+'.');note('Formation changed for this match.');refresh()};
- window.tlqSubstitute=function(){
-  if(!match)return;if(match.subs>=5){note('Maximum five substitutions used.');return}
-  const off=match.lineup.find(p=>String(p.id)===$('tlqOff').value),on=match.bench.find(p=>String(p.id)===$('tlqOn').value);
-  if(!off||!on)return;
-  if((off.pos==='GK')!==(on.pos==='GK')){note('A goalkeeper must be replaced by a goalkeeper.');return}
-  if(!tlAvailable(on)){note(on.name+' is unavailable.');return}
-  match.lineup=match.lineup.map(p=>String(p.id)===String(off.id)?on:p);
-  match.bench=match.bench.filter(p=>String(p.id)!==String(on.id));match.used.push(on.id);match.subs++;
-  log(match.minute+"' SUBSTITUTION: "+on.name+' replaces '+off.name+'.');note(match.subs+'/5 substitutions made.');refresh();
- };
+ window.tlqSubstitute=function(){window.tlqOpenSquad()};
  // Keep the original instant-result action unchanged; add a second mode.
+ const subButton=$('tlQuickMatch').querySelector('.tlq-side button');subButton.textContent='OPEN MATCHDAY SQUAD';subButton.onclick=window.tlqOpenSquad;
  const button=document.createElement('button');button.type='button';button.textContent='QUICK COMMENTARY';button.className='primary';button.onclick=begin;
  $('nextMatchScreen').querySelector('.ex-footer').appendChild(button);
  const originalDashboard=openDashboard;
- openDashboard=function(){stop();match=null;$('tlQuickMatch').style.display='none';originalDashboard()};
+ openDashboard=function(){stop();match=null;$('tlQuickMatch').style.display='none';$('tlMatchSquad').style.display='none';originalDashboard()};
 })();
 </script>
 
